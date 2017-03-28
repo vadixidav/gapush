@@ -48,3 +48,10 @@ pub struct TrackedIter<T> {
     iter: IntoIter<T>,
     size: usize,
 }
+
+impl<T> Iterator for TrackedIter<T> {
+    type Item = T;
+    fn next(&mut self) -> Option<T> {
+        self.iter.next()
+    }
+}
