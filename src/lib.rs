@@ -8,6 +8,7 @@ mod mem;
 
 use vec::*;
 use mem::TotalMemory;
+use heapsize::HeapSizeOf;
 
 use std::convert::TryFrom;
 
@@ -38,3 +39,26 @@ pub struct Program<Instruction, InstructionHandler, IntHandler, FloatHandler> {
     /// This is called to produce a float when one wasn't available.
     pub float_handler: FloatHandler,
 }
+
+impl<I, IH, IntH, FloatH> Program<I, IH, IntH, FloatH>
+    where I: HeapSizeOf
+{
+    fn new(max_memory: usize, instruction_handler: IH, int_handler: IntH, float_handler: FloatH) -> Self {
+        Program {
+            max_memory: max_memory,
+            execute_stack: TrackedVec::new(),
+            instruction_stack: TrackedVec::new(),
+            int_stack: TrackedVec::new(),
+            float_stack: TrackedVec::new(),
+            instruction_vec_stack: TrackedVec::new(),
+            int_vec_stack: TrackedVec::new(),
+            float_vec_stack: TrackedVec::new(),
+            instruction_handler: instruction_handler,
+            int_handler: int_handler,
+            float_handler: float_handler,
+        }
+    }
+}
+
+
+
