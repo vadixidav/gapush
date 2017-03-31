@@ -1,6 +1,7 @@
 use TotalMemory;
 
 use std::vec::IntoIter;
+use std::mem;
 
 pub struct TrackedVec<T> {
     vec: Vec<T>,
@@ -14,7 +15,7 @@ impl<T> TrackedVec<T>
     pub fn new() -> TrackedVec<T> {
         TrackedVec {
             vec: Vec::new(),
-            size: 0,
+            size: mem::size_of::<Self>(),
         }
     }
 
@@ -26,7 +27,11 @@ impl<T> TrackedVec<T>
 
     #[inline]
     pub fn pop(&mut self) -> Option<T> {
-        self.vec.pop()
+        let r = self.vec.pop();
+        if let Some(ref r) = r {
+            self.size -= r.total_memory();
+        }
+        r
     }
 
     #[inline]
@@ -55,3 +60,10 @@ impl<T> Iterator for TrackedIter<T> {
         self.iter.next()
     }
 }
+
+impl<T> TotalMemory for TrackedIter<T> {
+    fn total_memory(&self) -> usize {
+        self.size
+    }
+}
+
