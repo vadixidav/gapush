@@ -16,28 +16,28 @@ use std::convert::TryFrom;
 /// without going over a specified limit amount of memory (`max_memory`).
 pub struct Program<Ins, InsHandler, IntHandler, FloatHandler> {
     /// The limit of how much memory is allowed to be used.
-    pub max_memory: usize,
+    max_memory: usize,
     /// Instructions are popped from this stack to be executed and this stack is not directly accessed.
-    pub execute_stack: TrackedVec<Ins>,
+    execute_stack: TrackedVec<Ins>,
     /// This is a stack for handling instructions as data.
-    pub ins_stack: TrackedVec<Ins>,
+    ins_stack: TrackedVec<Ins>,
     /// This is a stack for integers.
-    pub int_stack: TrackedVec<i64>,
+    int_stack: TrackedVec<i64>,
     /// This is a stack for floats.
-    pub float_stack: TrackedVec<f64>,
+    float_stack: TrackedVec<f64>,
     /// This is a stack for instruction vectors.
-    pub ins_vec_stack: TrackedVec<TrackedVec<Ins>>,
+    ins_vec_stack: TrackedVec<TrackedVec<Ins>>,
     /// This is a stack for integer vectors.
-    pub int_vec_stack: TrackedVec<TrackedVec<i64>>,
+    int_vec_stack: TrackedVec<TrackedVec<i64>>,
     /// This is a stack for float vectors.
-    pub float_vec_stack: TrackedVec<TrackedVec<f64>>,
+    float_vec_stack: TrackedVec<TrackedVec<f64>>,
     
     /// This is called to produce an integer when one wasn't available.
-    pub ins_handler: InsHandler,
+    ins_handler: InsHandler,
     /// This is called to produce an integer when one wasn't available.
-    pub int_handler: IntHandler,
+    int_handler: IntHandler,
     /// This is called to produce a float when one wasn't available.
-    pub float_handler: FloatHandler,
+    float_handler: FloatHandler,
 }
 
 impl<I, IH, IntH, FloatH> Program<I, IH, IntH, FloatH>
