@@ -123,4 +123,213 @@ impl<Ins> State<Ins>
             SizeResult::Success
         }
     }
+
+    pub fn pop_exe(&mut self) -> Option<Ins> {
+        if let Some(e) = self.exe_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_ins(&mut self) -> Option<Ins> {
+        if let Some(e) = self.ins_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_int(&mut self) -> Option<i64> {
+        if let Some(e) = self.int_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_float(&mut self) -> Option<f64> {
+        if let Some(e) = self.float_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_ins_vec(&mut self) -> Option<TrackedVec<Ins>> {
+        if let Some(e) = self.ins_vec_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_int_vec(&mut self) -> Option<TrackedVec<i64>> {
+        if let Some(e) = self.int_vec_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_float_vec(&mut self) -> Option<TrackedVec<f64>> {
+        if let Some(e) = self.float_vec_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn rot_exe(&mut self, pos: usize) -> bool {
+        let len = self.exe_stack.len();
+        if pos < len {
+            let e = self.exe_stack.remove(len - pos - 1);
+            self.exe_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn rot_ins(&mut self, pos: usize) -> bool {
+        let len = self.ins_stack.len();
+        if pos < len {
+            let e = self.ins_stack.remove(len - pos - 1);
+            self.ins_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn rot_int(&mut self, pos: usize) -> bool {
+        let len = self.int_stack.len();
+        if pos < len {
+            let e = self.int_stack.remove(len - pos - 1);
+            self.int_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn rot_float(&mut self, pos: usize) -> bool {
+        let len = self.float_stack.len();
+        if pos < len {
+            let e = self.float_stack.remove(len - pos - 1);
+            self.float_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn rot_ins_vec(&mut self, pos: usize) -> bool {
+        let len = self.float_stack.len();
+        if pos < len {
+            let e = self.ins_vec_stack.remove(len - pos - 1);
+            self.ins_vec_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn rot_int_vec(&mut self, pos: usize) -> bool {
+        let len = self.int_vec_stack.len();
+        if pos < len {
+            let e = self.int_vec_stack.remove(len - pos - 1);
+            self.int_vec_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn rot_float_vec(&mut self, pos: usize) -> bool {
+        let len = self.float_vec_stack.len();
+        if pos < len {
+            let e = self.float_vec_stack.remove(len - pos - 1);
+            self.float_vec_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn copy_exe(&mut self, pos: usize) -> Option<Ins>
+        where Ins: Clone
+    {
+        let len = self.exe_stack.len();
+        if pos < len {
+            unsafe {Some(self.exe_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_ins(&mut self, pos: usize) -> Option<Ins>
+        where Ins: Clone
+    {
+        let len = self.ins_stack.len();
+        if pos < len {
+            unsafe {Some(self.ins_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_int(&mut self, pos: usize) -> Option<i64> {
+        let len = self.int_stack.len();
+        if pos < len {
+            unsafe {Some(self.int_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_float(&mut self, pos: usize) -> Option<f64> {
+        let len = self.float_stack.len();
+        if pos < len {
+            unsafe {Some(self.float_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_ins_vec(&mut self, pos: usize) -> Option<TrackedVec<Ins>>
+        where Ins: Clone
+    {
+        let len = self.ins_vec_stack.len();
+        if pos < len {
+            unsafe {Some(self.ins_vec_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_int_vec(&mut self, pos: usize) -> Option<TrackedVec<i64>> {
+        let len = self.int_vec_stack.len();
+        if pos < len {
+            unsafe {Some(self.int_vec_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_float_vec(&mut self, pos: usize) -> Option<TrackedVec<f64>> {
+        let len = self.float_vec_stack.len();
+        if pos < len {
+            unsafe {Some(self.float_vec_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
 }

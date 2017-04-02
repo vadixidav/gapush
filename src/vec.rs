@@ -4,6 +4,7 @@ use std::vec;
 use std::collections::vec_deque::{self, VecDeque};
 use std::mem;
 
+#[derive(Debug, Clone)]
 pub struct TrackedVec<T> {
     vec: Vec<T>,
     size: usize,
