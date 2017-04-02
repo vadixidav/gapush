@@ -37,8 +37,13 @@ impl<T> TrackedVec<T>
     }
 
     #[inline]
-    pub fn get(&mut self, ix: usize) -> Option<&T> {
+    pub fn get(&self, ix: usize) -> Option<&T> {
         self.vec.get(ix)
+    }
+
+    #[inline]
+    pub fn get_mut(&mut self, ix: usize) -> Option<&mut T> {
+        self.vec.get_mut(ix)
     }
 
     #[inline]
