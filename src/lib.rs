@@ -1,9 +1,12 @@
 extern crate rand;
 extern crate heapsize;
+#[macro_use] extern crate enum_primitive;
+extern crate num;
 
 mod vec;
 mod mem;
 mod state;
+mod simple;
 
 use state::*;
 
@@ -27,7 +30,9 @@ pub struct Machine<Ins, InsHandler, IntHandler, FloatHandler> {
 impl<I, IH, IntH, FloatH> Machine<I, IH, IntH, FloatH>
     where I: HeapSizeOf
 {
-    pub fn new(max_size: usize, ins_handler: IH, int_handler: IntH, float_handler: FloatH) -> Self {
+    pub fn new(max_size: usize, ins_handler: IH, int_handler: IntH, float_handler: FloatH) -> Self
+        where IH: FnMut() -> I, IntH: FnMut() -> i64, FloatH: FnMut() -> f64
+    {
         Machine {
             state: State::new(max_size),
             ins_handler: ins_handler,
@@ -37,7 +42,7 @@ impl<I, IH, IntH, FloatH> Machine<I, IH, IntH, FloatH>
     }
 }
 
-trait Instruction: Sized {
-    fn operate(self, &mut State<Self>);
+pub trait Instruction<IH, IntH, FloatH>: Sized {
+    fn operate(self, &mut Machine<Self, IH, IntH, FloatH>);
 }
 
