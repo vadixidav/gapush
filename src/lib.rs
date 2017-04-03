@@ -42,7 +42,9 @@ impl<I, IH, IntH, FloatH> Machine<I, IH, IntH, FloatH>
     }
 }
 
+/// An instruction which can be executed on a `Machine`.
 pub trait Instruction<IH, IntH, FloatH>: Sized {
-    fn operate(self, &mut Machine<Self, IH, IntH, FloatH>);
+    /// `operate` returns a boolean value which indicates the success of the operation.
+    fn operate(self, &mut Machine<Self, IH, IntH, FloatH>) -> bool;
 }
 

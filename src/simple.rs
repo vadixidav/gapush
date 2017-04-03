@@ -1,4 +1,5 @@
 use {Instruction, Machine};
+use heapsize::HeapSizeOf;
 use num::FromPrimitive;
 use rand;
 
@@ -18,5 +19,32 @@ impl rand::Rand for PlainOp {
 
 pub enum SimpleInstruction {
     PlainOp(PlainOp),
+}
+
+impl HeapSizeOf for SimpleInstruction {
+    fn heap_size_of_children(&self) -> usize {
+        use self::SimpleInstruction::*;
+        match *self {
+            PlainOp(_) => 0,
+        }
+    }
+}
+
+impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
+    where IH: FnMut() -> Self,
+          IntH: FnMut() -> i64,
+          FloatH: FnMut() -> f64
+{
+    fn operate(self, machine: &mut Machine<Self, IH, IntH, FloatH>) -> bool {
+        use self::SimpleInstruction::*;
+        use self::PlainOp::*;
+        match self {
+            PlainOp(Addi64) => {
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_add(b)).is_ok()
+            }
+        }
+    }
 }
 

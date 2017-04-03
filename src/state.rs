@@ -2,8 +2,7 @@ use vec::*;
 use TotalMemory;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SizeResult {
-    Success,
+pub enum SizeError {
     Full,
 }
 
@@ -47,80 +46,80 @@ impl<Ins> State<Ins> {
 impl<Ins> State<Ins>
     where Ins: TotalMemory
 {
-    pub fn push_exe(&mut self, ins: Ins) -> SizeResult {
+    pub fn push_exe(&mut self, ins: Ins) -> Result<(), SizeError> {
         let size = ins.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.exe_stack.push(ins);
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_ins(&mut self, ins: Ins) -> SizeResult {
+    pub fn push_ins(&mut self, ins: Ins) -> Result<(), SizeError> {
         let size = ins.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.ins_stack.push(ins);
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_int(&mut self, int: i64) -> SizeResult {
+    pub fn push_int(&mut self, int: i64) -> Result<(), SizeError> {
         let size = int.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.int_stack.push(int);
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_float(&mut self, float: f64) -> SizeResult {
+    pub fn push_float(&mut self, float: f64) -> Result<(), SizeError> {
         let size = float.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.float_stack.push(float);
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_ins_vec(&mut self, ins_vec: TrackedVec<Ins>) -> SizeResult {
+    pub fn push_ins_vec(&mut self, ins_vec: TrackedVec<Ins>) -> Result<(), SizeError> {
         let size = ins_vec.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.ins_vec_stack.push(ins_vec);
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_int_vec(&mut self, int_vec: TrackedVec<i64>) -> SizeResult {
+    pub fn push_int_vec(&mut self, int_vec: TrackedVec<i64>) -> Result<(), SizeError> {
         let size = int_vec.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.int_vec_stack.push(int_vec);
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_float_vec(&mut self, float_vec: TrackedVec<f64>) -> SizeResult {
+    pub fn push_float_vec(&mut self, float_vec: TrackedVec<f64>) -> Result<(), SizeError> {
         let size = float_vec.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             self.size += size;
             self.float_vec_stack.push(float_vec);
-            SizeResult::Success
+            Ok(())
         }
     }
 
@@ -333,42 +332,42 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn push_ins_to_vec(&mut self, ins: Ins) -> SizeResult {
+    pub fn push_ins_to_vec(&mut self, ins: Ins) -> Result<(), SizeError> {
         let size = ins.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             if let Some(ref mut v) = self.ins_vec_stack.last_mut() {
                 self.size += size;
                 v.push(ins);
             }
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_int_to_vec(&mut self, int: i64) -> SizeResult {
+    pub fn push_int_to_vec(&mut self, int: i64) -> Result<(), SizeError> {
         let size = int.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             if let Some(ref mut v) = self.int_vec_stack.last_mut() {
                 self.size += size;
                 v.push(int);
             }
-            SizeResult::Success
+            Ok(())
         }
     }
 
-    pub fn push_float_to_vec(&mut self, float: f64) -> SizeResult {
+    pub fn push_float_to_vec(&mut self, float: f64) -> Result<(), SizeError> {
         let size = float.total_memory();
         if size + self.size > self.max_size {
-            SizeResult::Full
+            Err(SizeError::Full)
         } else {
             if let Some(ref mut v) = self.float_vec_stack.last_mut() {
                 self.size += size;
                 v.push(float);
             }
-            SizeResult::Success
+            Ok(())
         }
     }
 
