@@ -1,7 +1,9 @@
 use {Instruction, Machine};
 use heapsize::HeapSizeOf;
+use mem::TotalMemory;
 use num::FromPrimitive;
 use rand;
+use vec::TrackedIter;
 
 enum_from_primitive! {
 /// Instructions which have implicit parameters and are encodable with a single integer.
@@ -19,6 +21,7 @@ impl rand::Rand for PlainOp {
 
 pub enum SimpleInstruction {
     PlainOp(PlainOp),
+    BasicBlock(TrackedIter<SimpleInstruction>),
 }
 
 impl HeapSizeOf for SimpleInstruction {
@@ -26,6 +29,7 @@ impl HeapSizeOf for SimpleInstruction {
         use self::SimpleInstruction::*;
         match *self {
             PlainOp(_) => 0,
+            BasicBlock(ref b) => b.total_memory(),
         }
     }
 }
@@ -43,6 +47,14 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 machine.state.push_int(a.wrapping_add(b)).is_ok()
+            }
+            BasicBlock(mut b) => {
+                if let Some(i) = b.next() {
+                    machine.state.push_exe(BasicBlock(b)).is_err() ||
+                    machine.state.push_exe(i).is_err()
+                } else {
+                    false
+                }
             }
         }
     }
