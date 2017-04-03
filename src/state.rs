@@ -264,7 +264,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_exe(&mut self, pos: usize) -> Option<Ins>
+    pub fn copy_exe(&self, pos: usize) -> Option<Ins>
         where Ins: Clone
     {
         let len = self.exe_stack.len();
@@ -275,7 +275,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_ins(&mut self, pos: usize) -> Option<Ins>
+    pub fn copy_ins(&self, pos: usize) -> Option<Ins>
         where Ins: Clone
     {
         let len = self.ins_stack.len();
@@ -286,7 +286,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_int(&mut self, pos: usize) -> Option<i64> {
+    pub fn copy_int(&self, pos: usize) -> Option<i64> {
         let len = self.int_stack.len();
         if pos < len {
             unsafe {Some(self.int_stack.get_unchecked(len - pos - 1).clone())}
@@ -295,7 +295,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_float(&mut self, pos: usize) -> Option<f64> {
+    pub fn copy_float(&self, pos: usize) -> Option<f64> {
         let len = self.float_stack.len();
         if pos < len {
             unsafe {Some(self.float_stack.get_unchecked(len - pos - 1).clone())}
@@ -304,7 +304,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_ins_vec(&mut self, pos: usize) -> Option<TrackedVec<Ins>>
+    pub fn copy_ins_vec(&self, pos: usize) -> Option<TrackedVec<Ins>>
         where Ins: Clone
     {
         let len = self.ins_vec_stack.len();
@@ -315,7 +315,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_int_vec(&mut self, pos: usize) -> Option<TrackedVec<i64>> {
+    pub fn copy_int_vec(&self, pos: usize) -> Option<TrackedVec<i64>> {
         let len = self.int_vec_stack.len();
         if pos < len {
             unsafe {Some(self.int_vec_stack.get_unchecked(len - pos - 1).clone())}
@@ -324,7 +324,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn copy_float_vec(&mut self, pos: usize) -> Option<TrackedVec<f64>> {
+    pub fn copy_float_vec(&self, pos: usize) -> Option<TrackedVec<f64>> {
         let len = self.float_vec_stack.len();
         if pos < len {
             unsafe {Some(self.float_vec_stack.get_unchecked(len - pos - 1).clone())}
@@ -399,17 +399,17 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn get_ins_from_vec(&mut self, ix: usize) -> Option<Ins>
+    pub fn get_ins_from_vec(&self, ix: usize) -> Option<Ins>
         where Ins: Clone
     {
         self.ins_vec_stack.last().and_then(|v| v.get(ix)).cloned()
     }
 
-    pub fn get_int_from_vec(&mut self, ix: usize) -> Option<i64> {
+    pub fn get_int_from_vec(&self, ix: usize) -> Option<i64> {
         self.int_vec_stack.last().and_then(|v| v.get(ix)).cloned()
     }
 
-    pub fn get_float_from_vec(&mut self, ix: usize) -> Option<f64> {
+    pub fn get_float_from_vec(&self, ix: usize) -> Option<f64> {
         self.float_vec_stack.last().and_then(|v| v.get(ix)).cloned()
     }
 

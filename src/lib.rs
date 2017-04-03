@@ -37,3 +37,7 @@ impl<I, IH, IntH, FloatH> Machine<I, IH, IntH, FloatH>
     }
 }
 
+trait Instruction: Sized {
+    fn operate(self, &mut State<Self>);
+}
+
