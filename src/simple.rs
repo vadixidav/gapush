@@ -1,6 +1,5 @@
 use {Instruction, Machine};
 use heapsize::HeapSizeOf;
-use mem::TotalMemory;
 use num::FromPrimitive;
 use rand;
 use vec::*;

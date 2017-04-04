@@ -2,7 +2,6 @@ use TotalMemory;
 
 use std::vec;
 use std::collections::vec_deque::{self, VecDeque};
-use std::mem;
 use std::iter;
 use heapsize::HeapSizeOf;
 
