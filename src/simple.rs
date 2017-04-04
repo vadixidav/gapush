@@ -44,6 +44,7 @@ pub enum SimpleInstruction {
     PlainOp(PlainOp),
     BasicBlock(TrackedIter<SimpleInstruction>),
     Loop(TrackedCycleIter<SimpleInstruction>),
+    If(TrackedIter<SimpleInstruction>, TrackedIter<SimpleInstruction>),
 }
 
 impl HeapSizeOf for SimpleInstruction {
@@ -53,6 +54,7 @@ impl HeapSizeOf for SimpleInstruction {
             PlainOp(_) => 0,
             BasicBlock(ref b) => b.heap_size_of_children(),
             Loop(ref l) => l.heap_size_of_children(),
+            If(ref b0, ref b1) => b0.heap_size_of_children() + b1.heap_size_of_children(),
         }
     }
 }
@@ -122,6 +124,10 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                 } else {
                     false
                 }
+            }
+            If(b0, b1) => {
+                let decider = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_exe(BasicBlock(if decider { b0 } else { b1 })).is_ok()
             }
         }
     }
