@@ -1,22 +1,23 @@
 use {Instruction, Machine};
 use heapsize::HeapSizeOf;
-use num::FromPrimitive;
 use rand;
 use vec::*;
+use std::mem;
 
-enum_from_primitive! {
 /// Instructions which have implicit parameters and are encodable with a single integer.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PlainOp {
+    /// integer: (a b -- (a + b))
     Addi64,
-}
+    /// integer: (a b -- (a - b))
+    Subi64,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        Self::from_u32(rng.gen_range(0, 1)).unwrap()
+        unsafe { mem::transmute(rng.gen_range(0u8, 2)) }
     }
 }
 
@@ -54,9 +55,14 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
         use self::PlainOp::*;
         match self {
             PlainOp(Addi64) => {
-                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 machine.state.push_int(a.wrapping_add(b)).is_ok()
+            }
+            PlainOp(Subi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_sub(b)).is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {

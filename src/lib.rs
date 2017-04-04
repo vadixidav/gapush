@@ -1,7 +1,5 @@
 extern crate rand;
 extern crate heapsize;
-#[macro_use] extern crate enum_primitive;
-extern crate num;
 
 mod vec;
 mod mem;
