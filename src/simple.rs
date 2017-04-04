@@ -15,13 +15,21 @@ pub enum PlainOp {
     Muli64,
     /// integer: (a b -- (a / b))
     Divi64,
+    /// integer: (a b -- (a << b))
+    Rotli64,
+    /// integer: (a b -- (a >> b))
+    Rotri64,
+    /// integer: (a b -- (a << b))
+    Shftli64,
+    /// integer: (a b -- (a >> b))
+    Shftri64,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 4)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 8)) }
     }
 }
 
@@ -79,6 +87,26 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                 machine.state
                     .push_int(a.checked_div(b).unwrap_or_else(&mut machine.int_handler))
                     .is_ok()
+            }
+            PlainOp(Rotli64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.rotate_left(b.abs() as u32)).is_ok()
+            }
+            PlainOp(Rotri64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.rotate_right(b.abs() as u32)).is_ok()
+            }
+            PlainOp(Shftli64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a << (b.abs() as u32)).is_ok()
+            }
+            PlainOp(Shftri64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a >> (b.abs() as u32)).is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {

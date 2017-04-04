@@ -19,6 +19,8 @@ pub struct State<Ins> {
     int_stack: Vec<i64>,
     /// This is a stack for floats.
     float_stack: Vec<f64>,
+    /// This is a stack for bools.
+    bool_stack: Vec<bool>,
     /// This is a stack for instruction vectors.
     ins_vec_stack: Vec<TrackedVec<Ins>>,
     /// This is a stack for integer vectors.
@@ -36,6 +38,7 @@ impl<Ins> State<Ins> {
             ins_stack: Vec::new(),
             int_stack: Vec::new(),
             float_stack: Vec::new(),
+            bool_stack: Vec::new(),
             ins_vec_stack: Vec::new(),
             int_vec_stack: Vec::new(),
             float_vec_stack: Vec::new(),
@@ -86,6 +89,17 @@ impl<Ins> State<Ins>
         } else {
             self.size += size;
             self.float_stack.push(float);
+            Ok(())
+        }
+    }
+
+    pub fn push_bool(&mut self, b: bool) -> Result<(), SizeError> {
+        let size = b.total_memory();
+        if size + self.size > self.max_size {
+            Err(SizeError::Full)
+        } else {
+            self.size += size;
+            self.bool_stack.push(b);
             Ok(())
         }
     }
@@ -152,6 +166,15 @@ impl<Ins> State<Ins>
 
     pub fn pop_float(&mut self) -> Option<f64> {
         if let Some(e) = self.float_stack.pop() {
+            self.size -= e.total_memory();
+            Some(e)
+        } else {
+            None
+        }
+    }
+
+    pub fn pop_bool(&mut self) -> Option<bool> {
+        if let Some(e) = self.bool_stack.pop() {
             self.size -= e.total_memory();
             Some(e)
         } else {
@@ -230,6 +253,17 @@ impl<Ins> State<Ins>
         }
     }
 
+    pub fn rot_bool(&mut self, pos: usize) -> bool {
+        let len = self.bool_stack.len();
+        if pos < len {
+            let e = self.bool_stack.remove(len - pos - 1);
+            self.bool_stack.push(e);
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn rot_ins_vec(&mut self, pos: usize) -> bool {
         let len = self.float_stack.len();
         if pos < len {
@@ -298,6 +332,15 @@ impl<Ins> State<Ins>
         let len = self.float_stack.len();
         if pos < len {
             unsafe {Some(self.float_stack.get_unchecked(len - pos - 1).clone())}
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_bool(&self, pos: usize) -> Option<bool> {
+        let len = self.bool_stack.len();
+        if pos < len {
+            unsafe {Some(self.bool_stack.get_unchecked(len - pos - 1).clone())}
         } else {
             None
         }
