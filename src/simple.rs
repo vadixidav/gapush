@@ -11,13 +11,17 @@ pub enum PlainOp {
     Addi64,
     /// integer: (a b -- (a - b))
     Subi64,
+    /// integer: (a b -- (a * b))
+    Muli64,
+    /// integer: (a b -- (a / b))
+    Divi64,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 2)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 4)) }
     }
 }
 
@@ -63,6 +67,18 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 machine.state.push_int(a.wrapping_sub(b)).is_ok()
+            }
+            PlainOp(Muli64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_mul(b)).is_ok()
+            }
+            PlainOp(Divi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state
+                    .push_int(a.checked_div(b).unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
