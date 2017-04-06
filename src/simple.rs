@@ -6,6 +6,7 @@ use std::mem;
 
 /// Instructions which have implicit parameters and are encodable with a single integer.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum PlainOp {
     /// integer: (a b -- (a + b))
     Addi64,
@@ -15,6 +16,14 @@ pub enum PlainOp {
     Muli64,
     /// integer: (a b -- (a / b))
     Divi64,
+    /// integer: (a b -- (a % b))
+    Remi64,
+    /// integer: (a -- -a)
+    Negi64,
+    /// integer: (a -- |a|)
+    Absi64,
+    /// integer: (a -- |a|)
+    Powi64,
     /// integer: (a b -- (a << b))
     Rotli64,
     /// integer: (a b -- (a >> b))
@@ -23,13 +32,21 @@ pub enum PlainOp {
     Shftli64,
     /// integer: (a b -- (a >> b))
     Shftri64,
+    /// integer: (a b -- (a & b))
+    Andi64,
+    /// integer: (a b -- (a | b))
+    Ori64,
+    /// integer: (a b -- (a ^ b))
+    Xori64,
+    /// integer: (a -- ~a)
+    Invi64,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 8)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 16)) }
     }
 }
 
@@ -90,25 +107,74 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .push_int(a.checked_div(b).unwrap_or_else(&mut machine.int_handler))
                     .is_ok()
             }
+            PlainOp(Remi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state
+                    .push_int(a.checked_rem(b).unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Negi64) => {
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state
+                    .push_int(a.checked_neg().unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Absi64) => {
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state
+                    .push_int(a.checked_abs().unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Powi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.pow((b.abs() & (0xFFFFFFFF)) as u32)).is_ok()
+            }
             PlainOp(Rotli64) => {
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
-                machine.state.push_int(a.rotate_left(b.abs() as u32)).is_ok()
+                machine.state.push_int(a.rotate_left((b & (0xFFFFFFFF)) as u32)).is_ok()
             }
             PlainOp(Rotri64) => {
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
-                machine.state.push_int(a.rotate_right(b.abs() as u32)).is_ok()
+                machine.state.push_int(a.rotate_right((b & (0xFFFFFFFF)) as u32)).is_ok()
             }
             PlainOp(Shftli64) => {
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
-                machine.state.push_int(a << (b.abs() as u32)).is_ok()
+                machine.state
+                    .push_int(a.checked_shl((b & (0xFFFFFFFF)) as u32)
+                                  .unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
             }
             PlainOp(Shftri64) => {
                 let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
-                machine.state.push_int(a >> (b.abs() as u32)).is_ok()
+                machine.state
+                    .push_int(a.checked_shr((b & (0xFFFFFFFF)) as u32)
+                                  .unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Andi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a & b).is_ok()
+            }
+            PlainOp(Ori64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a | b).is_ok()
+            }
+            PlainOp(Xori64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a ^ b).is_ok()
+            }
+            PlainOp(Invi64) => {
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(!a).is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
