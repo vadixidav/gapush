@@ -40,13 +40,25 @@ pub enum PlainOp {
     Xori64,
     /// integer: (a -- ~a)
     Invi64,
+    /// integer: (a b -- )
+    /// bool: ( -- a < b)
+    Lesi64,
+    /// integer: (a b -- )
+    /// bool: ( -- a > b)
+    Grti64,
+    /// integer: (a b -- )
+    /// bool: ( -- a = b)
+    Eqi64,
+    /// integer: (a b -- )
+    /// bool: ( -- a != b)
+    Neqi64,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 16)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 20)) }
     }
 }
 
@@ -175,6 +187,26 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Invi64) => {
                 let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
                 machine.state.push_int(!a).is_ok()
+            }
+            PlainOp(Lesi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a < b).is_ok()
+            }
+            PlainOp(Grti64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a > b).is_ok()
+            }
+            PlainOp(Eqi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a == b).is_ok()
+            }
+            PlainOp(Neqi64) => {
+                let b = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                let a = machine.state.pop_int().unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a != b).is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
