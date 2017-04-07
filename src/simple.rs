@@ -106,13 +106,21 @@ pub enum PlainOp {
     Neqb,
     /// bool: (a -- !a)
     Notb,
+
+    // Conversion operations
+    /// int: (a -- )
+    /// float: ( -- a)
+    Itof,
+    /// float: (a -- )
+    /// int: ( -- a)
+    Ftoi,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 42)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 44)) }
     }
 }
 
@@ -582,6 +590,28 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Notb) => {
                 let a = machine.state.pop_bool().unwrap_or(false);
                 machine.state.push_bool(!a).is_ok()
+            }
+            PlainOp(Itof) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_float(a as f64).is_ok()
+            }
+            PlainOp(Ftoi) => {
+                use std::num::FpCategory;
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine
+                    .state
+                    .push_int(match a.classify() {
+                                  FpCategory::Normal => a as i64,
+                                  FpCategory::Zero => 0,
+                                  _ => (machine.int_handler)(),
+                              })
+                    .is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
