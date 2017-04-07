@@ -8,6 +8,7 @@ use std::mem;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum PlainOp {
+    // Integer operations
     /// integer: (a -- a++)
     Inci64,
     /// integer: (a -- a--)
@@ -57,6 +58,7 @@ pub enum PlainOp {
     /// bool: ( -- a != b)
     Neqi64,
 
+    // Floating point operations
     /// float: (a -- a++)
     Incf64,
     /// float: (a -- a--)
@@ -92,13 +94,25 @@ pub enum PlainOp {
     /// float: (a b -- )
     /// bool: ( -- a != b)
     Neqf64,
+
+    // Boolean operations
+    /// bool: (a b -- a && b)
+    Andb,
+    /// bool: (a b -- a || b)
+    Orb,
+    /// bool: (a b -- a == b)
+    Eqb,
+    /// bool: (a b -- a != b)
+    Neqb,
+    /// bool: (a -- !a)
+    Notb,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 37)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 42)) }
     }
 }
 
@@ -544,6 +558,30 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .pop_float()
                     .unwrap_or_else(&mut machine.float_handler);
                 machine.state.push_bool(a != b).is_ok()
+            }
+            PlainOp(Andb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a && b).is_ok()
+            }
+            PlainOp(Orb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a || b).is_ok()
+            }
+            PlainOp(Eqb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a == b).is_ok()
+            }
+            PlainOp(Neqb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a != b).is_ok()
+            }
+            PlainOp(Notb) => {
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(!a).is_ok()
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
