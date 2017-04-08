@@ -156,13 +156,27 @@ pub enum PlainOp {
     /// int: (b -- )
     /// float vec: (a b.. -- a b.. a)
     Copyf64v,
+    /// ins: (a -- )
+    Popins,
+    /// int: (a -- )
+    Popi64,
+    /// float: (a -- )
+    Popf64,
+    /// bool: (a -- )
+    Popb,
+    /// ins vec: (a -- )
+    Popinsv,
+    /// int vec: (a -- )
+    Popi64v,
+    /// float vec: (a -- )
+    Popf64v,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 58)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 65)) }
     }
 }
 
@@ -781,6 +795,13 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     false
                 }
             }
+            PlainOp(Popins) => machine.state.pop_ins().is_some(),
+            PlainOp(Popi64) => machine.state.pop_int().is_some(),
+            PlainOp(Popf64) => machine.state.pop_float().is_some(),
+            PlainOp(Popb) => machine.state.pop_bool().is_some(),
+            PlainOp(Popinsv) => machine.state.pop_ins_vec().is_some(),
+            PlainOp(Popi64v) => machine.state.pop_int_vec().is_some(),
+            PlainOp(Popf64v) => machine.state.pop_float_vec().is_some(),
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
                     machine.state.push_exe(BasicBlock(b)).is_err() ||
