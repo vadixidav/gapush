@@ -196,6 +196,11 @@ pub enum SimpleInstruction {
     BasicBlock(TrackedIter<SimpleInstruction>),
     Loop(TrackedCycleIter<SimpleInstruction>),
     If(TrackedIter<SimpleInstruction>, TrackedIter<SimpleInstruction>),
+    Pushi64(i64),
+    Pushf64(f64),
+    Pushb(bool),
+    Pushi64v(TrackedVec<i64>),
+    Pushf64v(TrackedVec<f64>),
 }
 
 impl HeapSizeOf for SimpleInstruction {
@@ -206,6 +211,11 @@ impl HeapSizeOf for SimpleInstruction {
             BasicBlock(ref b) => b.heap_size_of_children(),
             Loop(ref l) => l.heap_size_of_children(),
             If(ref b0, ref b1) => b0.heap_size_of_children() + b1.heap_size_of_children(),
+            Pushi64(_) => 0,
+            Pushf64(_) => 0,
+            Pushb(_) => 0,
+            Pushi64v(ref v) => v.heap_size_of_children(),
+            Pushf64v(ref v) => v.heap_size_of_children(),
         }
     }
 }
@@ -829,6 +839,11 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .push_exe(BasicBlock(if decider { b0 } else { b1 }))
                     .is_ok()
             }
+            Pushi64(n) => machine.state.push_int(n).is_ok(),
+            Pushf64(n) => machine.state.push_float(n).is_ok(),
+            Pushb(b) => machine.state.push_bool(b).is_ok(),
+            Pushi64v(v) => machine.state.push_int_vec(v).is_ok(),
+            Pushf64v(v) => machine.state.push_float_vec(v).is_ok(),
         }
     }
 }
