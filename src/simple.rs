@@ -114,13 +114,55 @@ pub enum PlainOp {
     /// float: (a -- )
     /// int: ( -- a)
     Ftoi,
+
+    // Stack manipulation
+    /// int: (b -- )
+    /// ins: (a b.. -- b.. a)
+    Rotins,
+    /// int: (a b.. b -- b.. a)
+    Roti64,
+    /// int: (b -- )
+    /// float: (a b.. -- b.. a)
+    Rotf64,
+    /// int: (b -- )
+    /// bool: (a b.. -- b.. a)
+    Rotb,
+    /// int: (b -- )
+    /// ins vec: (a b.. -- b.. a)
+    Rotinsv,
+    /// int: (b -- )
+    /// int vec: (a b.. -- b.. a)
+    Roti64v,
+    /// int: (b -- )
+    /// float vec: (a b.. -- b.. a)
+    Rotf64v,
+    /// int: (b -- )
+    /// ins: (a b.. -- a b.. a)
+    Copyins,
+    /// int: (a b.. b -- a b.. a)
+    Copyi64,
+    /// int: (b -- )
+    /// float: (a b.. -- a b.. a)
+    Copyf64,
+    /// int: (b -- )
+    /// bool: (a b.. -- a b.. a)
+    Copyb,
+    /// int: (b -- )
+    /// ins vec: (a b.. -- a b.. a)
+    Copyinsv,
+    /// int: (b -- )
+    /// int vec: (a b.. -- a b.. a)
+    Copyi64v,
+    /// int: (b -- )
+    /// float vec: (a b.. -- a b.. a)
+    Copyf64v,
 }
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 44)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 58)) }
     }
 }
 
@@ -612,6 +654,132 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                                   _ => (machine.int_handler)(),
                               })
                     .is_ok()
+            }
+            PlainOp(Rotins) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_ins((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Roti64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_int((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Rotf64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_float((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Rotb) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_bool((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Rotinsv) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_ins_vec((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Roti64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_int_vec((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Rotf64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_float_vec((pos & 0xFFFFFFFF) as usize)
+            }
+            PlainOp(Copyins) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_ins((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_ins(copy).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Copyi64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_int((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_int(copy).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Copyf64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_float((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_float(copy).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Copyb) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_bool((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_bool(copy).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Copyinsv) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_ins_vec((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_ins_vec(copy).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Copyi64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_int_vec((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_int_vec(copy).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Copyf64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                if let Some(copy) = machine.state.copy_float_vec((pos & 0xFFFFFFFF) as usize) {
+                    machine.state.push_float_vec(copy).is_ok()
+                } else {
+                    false
+                }
             }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
