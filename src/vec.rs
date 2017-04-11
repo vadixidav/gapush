@@ -43,6 +43,11 @@ impl<T> TrackedVec<T>
     }
 
     #[inline]
+    pub fn last(&self) -> Option<&T> {
+        self.vec.last()
+    }
+
+    #[inline]
     pub fn get_mut(&mut self, ix: usize) -> Option<&mut T> {
         self.vec.get_mut(ix)
     }

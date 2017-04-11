@@ -455,6 +455,18 @@ impl<Ins> State<Ins>
         self.float_vec_stack.last().and_then(|v| v.get(ix)).cloned()
     }
 
+    pub fn get_top_ins_vec(&self) -> Option<&TrackedVec<Ins>> {
+        self.ins_vec_stack.last()
+    }
+
+    pub fn get_top_int_vec(&self) -> Option<&TrackedVec<i64>> {
+        self.int_vec_stack.last()
+    }
+
+    pub fn get_top_float_vec(&self) -> Option<&TrackedVec<f64>> {
+        self.float_vec_stack.last()
+    }
+
     pub fn write_ins_to_vec(&mut self, ix: usize, ins: Ins) {
         if let Some(e) = self.ins_vec_stack.last_mut().and_then(|v| v.get_mut(ix)) {
             self.size -= e.total_memory();

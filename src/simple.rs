@@ -190,6 +190,17 @@ pub enum PlainOp {
     /// float vec: (_@(h:t) -- t)
     /// float: ( -- h)
     Popvf64,
+    /// int: (i -- )
+    /// ins vec: (v -- )
+    /// ins: ( -- v[i])
+    Readvins,
+    /// int: (i -- v[i])
+    /// int vec: (v -- )
+    Readvi64,
+    /// int: (i -- )
+    /// float vec: (v -- )
+    /// float: ( -- v[i])
+    Readvf64,
 
     // Auxiliary operations
     /// int: ( -- 0)
@@ -200,7 +211,7 @@ impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 72)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 75)) }
     }
 }
 
@@ -355,7 +366,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .unwrap_or_else(&mut machine.int_handler);
                 machine
                     .state
-                    .push_int(a.pow((b.abs() & (0xFFFFFFFF)) as u32))
+                    .push_int(a.pow((b.abs() & (0x7FFFFFFF)) as u32))
                     .is_ok()
             }
             PlainOp(Rotli64) => {
@@ -369,7 +380,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .unwrap_or_else(&mut machine.int_handler);
                 machine
                     .state
-                    .push_int(a.rotate_left((b & (0xFFFFFFFF)) as u32))
+                    .push_int(a.rotate_left((b & (0x7FFFFFFF)) as u32))
                     .is_ok()
             }
             PlainOp(Rotri64) => {
@@ -383,7 +394,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .unwrap_or_else(&mut machine.int_handler);
                 machine
                     .state
-                    .push_int(a.rotate_right((b & (0xFFFFFFFF)) as u32))
+                    .push_int(a.rotate_right((b & (0x7FFFFFFF)) as u32))
                     .is_ok()
             }
             PlainOp(Shftli64) => {
@@ -397,7 +408,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .unwrap_or_else(&mut machine.int_handler);
                 machine
                     .state
-                    .push_int(a.checked_shl((b & (0xFFFFFFFF)) as u32)
+                    .push_int(a.checked_shl((b & (0x7FFFFFFF)) as u32)
                                   .unwrap_or_else(&mut machine.int_handler))
                     .is_ok()
             }
@@ -412,7 +423,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .unwrap_or_else(&mut machine.int_handler);
                 machine
                     .state
-                    .push_int(a.checked_shr((b & (0xFFFFFFFF)) as u32)
+                    .push_int(a.checked_shr((b & (0x7FFFFFFF)) as u32)
                                   .unwrap_or_else(&mut machine.int_handler))
                     .is_ok()
             }
@@ -708,56 +719,56 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_ins((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_ins((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Roti64) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_int((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_int((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Rotf64) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_float((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_float((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Rotb) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_bool((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_bool((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Rotinsv) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_ins_vec((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_ins_vec((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Roti64v) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_int_vec((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_int_vec((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Rotf64v) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                machine.state.rot_float_vec((pos & 0xFFFFFFFF) as usize)
+                machine.state.rot_float_vec((pos & 0x7FFFFFFF) as usize)
             }
             PlainOp(Copyins) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_ins((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_ins((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_ins(copy).is_ok()
                 } else {
                     false
@@ -768,7 +779,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_int((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_int((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_int(copy).is_ok()
                 } else {
                     false
@@ -779,7 +790,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_float((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_float((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_float(copy).is_ok()
                 } else {
                     false
@@ -790,7 +801,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_bool((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_bool((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_bool(copy).is_ok()
                 } else {
                     false
@@ -801,7 +812,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_ins_vec((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_ins_vec((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_ins_vec(copy).is_ok()
                 } else {
                     false
@@ -812,7 +823,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_int_vec((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_int_vec((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_int_vec(copy).is_ok()
                 } else {
                     false
@@ -823,7 +834,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_float_vec((pos & 0xFFFFFFFF) as usize) {
+                if let Some(copy) = machine.state.copy_float_vec((pos & 0x7FFFFFFF) as usize) {
                     machine.state.push_float_vec(copy).is_ok()
                 } else {
                     false
@@ -898,6 +909,45 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                 } else {
                     false
                 }
+            }
+            PlainOp(Readvins) => {
+                machine
+                    .state
+                    .get_top_int_vec()
+                    .and_then(|v| v.last())
+                    .and_then(|ix| {
+                                  machine
+                                      .state
+                                      .get_ins_from_vec((ix & 0x7FFFFFFF) as usize)
+                              })
+                    .and_then(|e| machine.state.push_ins(e).ok())
+                    .is_some()
+            }
+            PlainOp(Readvi64) => {
+                machine
+                    .state
+                    .get_top_int_vec()
+                    .and_then(|v| v.last())
+                    .and_then(|ix| {
+                                  machine
+                                      .state
+                                      .get_int_from_vec((ix & 0x7FFFFFFF) as usize)
+                              })
+                    .and_then(|e| machine.state.push_int(e).ok())
+                    .is_some()
+            }
+            PlainOp(Readvf64) => {
+                machine
+                    .state
+                    .get_top_int_vec()
+                    .and_then(|v| v.last())
+                    .and_then(|ix| {
+                                  machine
+                                      .state
+                                      .get_float_from_vec((ix & 0x7FFFFFFF) as usize)
+                              })
+                    .and_then(|e| machine.state.push_float(e).ok())
+                    .is_some()
             }
             PlainOp(Zeroi64) => machine.state.push_int(0).is_ok(),
             BasicBlock(mut b) => {
