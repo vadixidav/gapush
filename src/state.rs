@@ -467,11 +467,18 @@ impl<Ins> State<Ins>
         self.float_vec_stack.last()
     }
 
-    pub fn write_ins_to_vec(&mut self, ix: usize, ins: Ins) {
+    pub fn write_ins_to_vec(&mut self, ix: usize, ins: Ins) -> Result<bool, SizeError> {
         if let Some(e) = self.ins_vec_stack.last_mut().and_then(|v| v.get_mut(ix)) {
-            self.size -= e.total_memory();
-            self.size += ins.total_memory();
-            *e = ins;
+            if self.size + ins.total_memory() < self.max_size + e.total_memory() {
+                self.size -= e.total_memory();
+                self.size += ins.total_memory();
+                *e = ins;
+                Ok(true)
+            } else {
+                Err(SizeError::Full)
+            }
+        } else {
+            Ok(false)
         }
     }
 

@@ -201,6 +201,20 @@ pub enum PlainOp {
     /// float vec: (v -- )
     /// float: ( -- v[i])
     Readvf64,
+    /// int: (i -- )
+    /// ins: (e -- )
+    /// ins vec: (v -- v)
+    /// v[i] = e
+    Writevins,
+    /// int: (e i -- )
+    /// int vec: (v -- v)
+    /// v[i] = e
+    Writevi64,
+    /// int: (i -- )
+    /// float: (e -- )
+    /// float vec: (v -- v)
+    /// v[i] = e
+    Writevf64,
 
     // Auxiliary operations
     /// int: ( -- 0)
@@ -211,7 +225,7 @@ impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 75)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 78)) }
     }
 }
 
@@ -913,8 +927,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Readvins) => {
                 machine
                     .state
-                    .get_top_int_vec()
-                    .and_then(|v| v.last())
+                    .pop_int()
                     .and_then(|ix| {
                                   machine
                                       .state
@@ -926,8 +939,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Readvi64) => {
                 machine
                     .state
-                    .get_top_int_vec()
-                    .and_then(|v| v.last())
+                    .pop_int()
                     .and_then(|ix| {
                                   machine
                                       .state
@@ -939,8 +951,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Readvf64) => {
                 machine
                     .state
-                    .get_top_int_vec()
-                    .and_then(|v| v.last())
+                    .pop_int()
                     .and_then(|ix| {
                                   machine
                                       .state
@@ -948,6 +959,43 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                               })
                     .and_then(|e| machine.state.push_float(e).ok())
                     .is_some()
+            }
+            PlainOp(Writevins) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| machine.state.pop_ins().map(|e| (ix, e)))
+                    .and_then(|(ix, e)| {
+                                  machine
+                                      .state
+                                      .write_ins_to_vec((ix & 0x7FFFFFFF) as usize, e)
+                                      .ok()
+                              })
+                    .unwrap_or(false)
+            }
+            PlainOp(Writevi64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| machine.state.pop_int().map(|e| (ix, e)))
+                    .map_or(false, |(ix, e)| {
+                        machine
+                            .state
+                            .write_int_to_vec((ix & 0x7FFFFFFF) as usize, e);
+                        true
+                    })
+            }
+            PlainOp(Writevf64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| machine.state.pop_float().map(|e| (ix, e)))
+                    .map_or(false, |(ix, e)| {
+                        machine
+                            .state
+                            .write_float_to_vec((ix & 0x7FFFFFFF) as usize, e);
+                        true
+                    })
             }
             PlainOp(Zeroi64) => machine.state.push_int(0).is_ok(),
             BasicBlock(mut b) => {
