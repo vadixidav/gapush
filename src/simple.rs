@@ -173,14 +173,23 @@ pub enum PlainOp {
 
     // Vector Operations
     /// ins: (a -- )
-    /// ins vec: (v -- v:a)
+    /// ins vec: (v -- a:v)
     Pushvins,
     /// int: (a -- )
-    /// int vec: (v -- v:a)
+    /// int vec: (v -- a:v)
     Pushvi64,
     /// float: (a -- )
-    /// float vec: (v -- v:a)
+    /// float vec: (v -- a:v)
     Pushvf64,
+    /// ins vec: (_@(h:t) -- t)
+    /// ins: ( -- h)
+    Popvins,
+    /// int vec: (_@(h:t) -- t)
+    /// int: ( -- h)
+    Popvi64,
+    /// float vec: (_@(h:t) -- t)
+    /// float: ( -- h)
+    Popvf64,
 
     // Auxiliary operations
     /// int: ( -- 0)
@@ -191,7 +200,7 @@ impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 69)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 72)) }
     }
 }
 
@@ -850,6 +859,42 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     (machine.state.pop_float(), machine.state.pop_float_vec()) {
                     v.push(e);
                     machine.state.push_float_vec(v).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Popvins) => {
+                if let Some(mut v) = machine.state.pop_ins_vec() {
+                    let fromv = v.pop();
+                    // NOTE: This will succeed as the memory is decreased in the vector.
+                    machine.state.push_ins_vec(v).ok();
+                    fromv
+                        .and_then(|e| machine.state.push_ins(e).ok())
+                        .is_some()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Popvi64) => {
+                if let Some(mut v) = machine.state.pop_int_vec() {
+                    let fromv = v.pop();
+                    // NOTE: This will succeed as the memory is decreased in the vector.
+                    machine.state.push_int_vec(v).ok();
+                    fromv
+                        .and_then(|e| machine.state.push_int(e).ok())
+                        .is_some()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Popvf64) => {
+                if let Some(mut v) = machine.state.pop_float_vec() {
+                    let fromv = v.pop();
+                    // NOTE: This will succeed as the memory is decreased in the vector.
+                    machine.state.push_float_vec(v).ok();
+                    fromv
+                        .and_then(|e| machine.state.push_float(e).ok())
+                        .is_some()
                 } else {
                     false
                 }
