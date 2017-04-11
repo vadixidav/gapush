@@ -219,13 +219,44 @@ pub enum PlainOp {
     // Auxiliary operations
     /// int: ( -- 0)
     Zeroi64,
+
+    // Instruction construction
+    /// int: (n -- )
+    /// ins: ( -- PlainOp)
+    CreatePlain,
+    /// ins vec: (b -- )
+    /// ins: ( -- BasicBlock(b))
+    CreateBasicBlock,
+    /// ins vec: (b -- )
+    /// ins: ( -- Loop(b))
+    CreateLoop,
+    /// ins vec: (t f -- )
+    /// ins: ( -- If(f, t))
+    CreateIf,
+    /// int: (n -- )
+    /// ins: ( -- Pushi64(n))
+    CreatePushi64,
+    /// float: (n -- )
+    /// ins: ( -- Pushf64(n))
+    CreatePushf64,
+    /// bool: (b -- )
+    /// ins: ( -- Pushb(b))
+    CreatePushb,
+    /// int vec: (v -- )
+    /// ins: ( -- Pushi64v(v))
+    CreatePushi64v,
+    /// float vec: (v -- )
+    /// ins: ( -- Pushf64v(v))
+    CreatePushf64v,
 }
+
+const TOTAL_PLAIN_INSTRUCTIONS: usize = 87;
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 78)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, TOTAL_PLAIN_INSTRUCTIONS)) }
     }
 }
 
@@ -998,6 +1029,84 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     })
             }
             PlainOp(Zeroi64) => machine.state.push_int(0).is_ok(),
+            PlainOp(CreatePlain) => {
+                machine
+                    .state
+                    .pop_int()
+                    .map(|n| (n & 0x7FFFFFFF) as usize)
+                    .and_then(|n| if n < TOTAL_PLAIN_INSTRUCTIONS {
+                                  Some(unsafe { mem::transmute(n as u8) })
+                              } else {
+                                  None
+                              })
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreateBasicBlock) => {
+                machine
+                    .state
+                    .pop_ins_vec()
+                    .map(|v| BasicBlock(v.into_iter()))
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreateLoop) => {
+                machine
+                    .state
+                    .pop_ins_vec()
+                    .map(|v| Loop(v.into_cycle_iter()))
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreateIf) => {
+                machine
+                    .state
+                    .pop_ins_vec()
+                    .and_then(|vf| machine.state.pop_ins_vec().map(|vt| (vf, vt)))
+                    .map(|(vf, vt)| If(vf.into_iter(), vt.into_iter()))
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushi64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .map(Pushi64)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushf64) => {
+                machine
+                    .state
+                    .pop_float()
+                    .map(Pushf64)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushb) => {
+                machine
+                    .state
+                    .pop_bool()
+                    .map(Pushb)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushi64v) => {
+                machine
+                    .state
+                    .pop_int_vec()
+                    .map(Pushi64v)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushf64v) => {
+                machine
+                    .state
+                    .pop_float_vec()
+                    .map(Pushf64v)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
                     machine.state.push_exe(BasicBlock(b)).is_err() ||
