@@ -171,6 +171,17 @@ pub enum PlainOp {
     /// float vec: (a -- )
     Popf64v,
 
+    // Vector Operations
+    /// ins: (a -- )
+    /// ins vec: (v -- v:a)
+    Pushvins,
+    /// int: (a -- )
+    /// int vec: (v -- v:a)
+    Pushvi64,
+    /// float: (a -- )
+    /// float vec: (v -- v:a)
+    Pushvf64,
+
     // Auxiliary operations
     /// int: ( -- 0)
     Zeroi64,
@@ -180,7 +191,7 @@ impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
         // NOTE: Change whenever PlainOp is changed.
         // TODO: Switch to proc macros 1.1 framework when compiler plugin is developed.
-        unsafe { mem::transmute(rng.gen_range(0u8, 66)) }
+        unsafe { mem::transmute(rng.gen_range(0u8, 69)) }
     }
 }
 
@@ -816,6 +827,33 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Popinsv) => machine.state.pop_ins_vec().is_some(),
             PlainOp(Popi64v) => machine.state.pop_int_vec().is_some(),
             PlainOp(Popf64v) => machine.state.pop_float_vec().is_some(),
+            PlainOp(Pushvins) => {
+                if let (Some(e), Some(mut v)) =
+                    (machine.state.pop_ins(), machine.state.pop_ins_vec()) {
+                    v.push(e);
+                    machine.state.push_ins_vec(v).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Pushvi64) => {
+                if let (Some(e), Some(mut v)) =
+                    (machine.state.pop_int(), machine.state.pop_int_vec()) {
+                    v.push(e);
+                    machine.state.push_int_vec(v).is_ok()
+                } else {
+                    false
+                }
+            }
+            PlainOp(Pushvf64) => {
+                if let (Some(e), Some(mut v)) =
+                    (machine.state.pop_float(), machine.state.pop_float_vec()) {
+                    v.push(e);
+                    machine.state.push_float_vec(v).is_ok()
+                } else {
+                    false
+                }
+            }
             PlainOp(Zeroi64) => machine.state.push_int(0).is_ok(),
             BasicBlock(mut b) => {
                 if let Some(i) = b.next() {
