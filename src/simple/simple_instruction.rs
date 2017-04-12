@@ -248,9 +248,19 @@ pub enum PlainOp {
     /// float vec: (v -- )
     /// ins: ( -- Pushf64v(v))
     CreatePushf64v,
+
+    // Execution control
+    /// exe: (e -- )
+    Return,
+    /// exe: (e -- )
+    /// ins: ( -- e)
+    Yield,
+    /// ins: (e -- )
+    /// exe: ( -- e)
+    Call,
 }
 
-const TOTAL_PLAIN_INSTRUCTIONS: usize = 87;
+const TOTAL_PLAIN_INSTRUCTIONS: usize = 90;
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
@@ -1106,6 +1116,21 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .pop_float_vec()
                     .map(Pushf64v)
                     .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(Return) => machine.state.pop_exe().is_some(),
+            PlainOp(Yield) => {
+                machine
+                    .state
+                    .pop_exe()
+                    .and_then(|e| machine.state.push_ins(e).ok())
+                    .is_some()
+            }
+            PlainOp(Call) => {
+                machine
+                    .state
+                    .pop_ins()
+                    .and_then(|e| machine.state.push_exe(e).ok())
                     .is_some()
             }
             BasicBlock(mut b) => {
