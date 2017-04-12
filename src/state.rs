@@ -375,7 +375,7 @@ impl<Ins> State<Ins>
         }
     }
 
-    pub fn push_ins_to_vec(&mut self, ins: Ins) -> Result<(), SizeError> {
+    pub fn push_ins_to_vec(&mut self, ins: Ins) -> Result<bool, SizeError> {
         let size = ins.total_memory();
         if size + self.size > self.max_size {
             Err(SizeError::Full)
@@ -383,12 +383,14 @@ impl<Ins> State<Ins>
             if let Some(ref mut v) = self.ins_vec_stack.last_mut() {
                 self.size += size;
                 v.push(ins);
+                Ok(true)
+            } else {
+                Ok(false)
             }
-            Ok(())
         }
     }
 
-    pub fn push_int_to_vec(&mut self, int: i64) -> Result<(), SizeError> {
+    pub fn push_int_to_vec(&mut self, int: i64) -> Result<bool, SizeError> {
         let size = int.total_memory();
         if size + self.size > self.max_size {
             Err(SizeError::Full)
@@ -396,12 +398,14 @@ impl<Ins> State<Ins>
             if let Some(ref mut v) = self.int_vec_stack.last_mut() {
                 self.size += size;
                 v.push(int);
+                Ok(true)
+            } else {
+                Ok(false)
             }
-            Ok(())
         }
     }
 
-    pub fn push_float_to_vec(&mut self, float: f64) -> Result<(), SizeError> {
+    pub fn push_float_to_vec(&mut self, float: f64) -> Result<bool, SizeError> {
         let size = float.total_memory();
         if size + self.size > self.max_size {
             Err(SizeError::Full)
@@ -409,8 +413,10 @@ impl<Ins> State<Ins>
             if let Some(ref mut v) = self.float_vec_stack.last_mut() {
                 self.size += size;
                 v.push(float);
+                Ok(true)
+            } else {
+                Ok(false)
             }
-            Ok(())
         }
     }
 

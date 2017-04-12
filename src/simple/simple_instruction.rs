@@ -903,31 +903,25 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
             PlainOp(Popi64v) => machine.state.pop_int_vec().is_some(),
             PlainOp(Popf64v) => machine.state.pop_float_vec().is_some(),
             PlainOp(Pushvins) => {
-                if let (Some(e), Some(mut v)) =
-                    (machine.state.pop_ins(), machine.state.pop_ins_vec()) {
-                    v.push(e);
-                    machine.state.push_ins_vec(v).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .pop_ins()
+                    .and_then(|e| machine.state.push_ins_to_vec(e).ok())
+                    .unwrap_or(false)
             }
             PlainOp(Pushvi64) => {
-                if let (Some(e), Some(mut v)) =
-                    (machine.state.pop_int(), machine.state.pop_int_vec()) {
-                    v.push(e);
-                    machine.state.push_int_vec(v).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|e| machine.state.push_int_to_vec(e).ok())
+                    .unwrap_or(false)
             }
             PlainOp(Pushvf64) => {
-                if let (Some(e), Some(mut v)) =
-                    (machine.state.pop_float(), machine.state.pop_float_vec()) {
-                    v.push(e);
-                    machine.state.push_float_vec(v).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .pop_float()
+                    .and_then(|e| machine.state.push_float_to_vec(e).ok())
+                    .unwrap_or(false)
             }
             PlainOp(Popvins) => {
                 if let Some(mut v) = machine.state.pop_ins_vec() {
