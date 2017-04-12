@@ -923,42 +923,9 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .and_then(|e| machine.state.push_float_to_vec(e).ok())
                     .unwrap_or(false)
             }
-            PlainOp(Popvins) => {
-                if let Some(mut v) = machine.state.pop_ins_vec() {
-                    let fromv = v.pop();
-                    // NOTE: This will succeed as the memory is decreased in the vector.
-                    machine.state.push_ins_vec(v).ok();
-                    fromv
-                        .and_then(|e| machine.state.push_ins(e).ok())
-                        .is_some()
-                } else {
-                    false
-                }
-            }
-            PlainOp(Popvi64) => {
-                if let Some(mut v) = machine.state.pop_int_vec() {
-                    let fromv = v.pop();
-                    // NOTE: This will succeed as the memory is decreased in the vector.
-                    machine.state.push_int_vec(v).ok();
-                    fromv
-                        .and_then(|e| machine.state.push_int(e).ok())
-                        .is_some()
-                } else {
-                    false
-                }
-            }
-            PlainOp(Popvf64) => {
-                if let Some(mut v) = machine.state.pop_float_vec() {
-                    let fromv = v.pop();
-                    // NOTE: This will succeed as the memory is decreased in the vector.
-                    machine.state.push_float_vec(v).ok();
-                    fromv
-                        .and_then(|e| machine.state.push_float(e).ok())
-                        .is_some()
-                } else {
-                    false
-                }
-            }
+            PlainOp(Popvins) => machine.state.pop_ins_from_vec().is_some(),
+            PlainOp(Popvi64) => machine.state.pop_int_from_vec().is_some(),
+            PlainOp(Popvf64) => machine.state.pop_float_from_vec().is_some(),
             PlainOp(Readvins) => {
                 machine
                     .state
