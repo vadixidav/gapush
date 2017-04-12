@@ -37,6 +37,8 @@ impl<I, IH, IntH, FloatH> Machine<I, IH, IntH, FloatH>
         }
     }
 
+    /// Run a cycle of the machine unconditionally, executing an instruction produced by the instruction handler if
+    /// necessary, and return whether or not the instruction executed was successful.
     pub fn cycle(&mut self) -> bool
         where I: Instruction<IH, IntH, FloatH>
     {
