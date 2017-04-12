@@ -4,7 +4,7 @@ extern crate heapsize;
 mod vec;
 mod mem;
 mod state;
-mod simple;
+pub mod simple;
 
 use state::*;
 
@@ -26,17 +26,21 @@ pub struct Machine<Ins, InsHandler, IntHandler, FloatHandler> {
 }
 
 impl<I, IH, IntH, FloatH> Machine<I, IH, IntH, FloatH>
-    where I: HeapSizeOf
+    where I: HeapSizeOf, IH: FnMut() -> I, IntH: FnMut() -> i64, FloatH: FnMut() -> f64
 {
-    pub fn new(max_size: usize, ins_handler: IH, int_handler: IntH, float_handler: FloatH) -> Self
-        where IH: FnMut() -> I, IntH: FnMut() -> i64, FloatH: FnMut() -> f64
-    {
+    pub fn new(max_size: usize, ins_handler: IH, int_handler: IntH, float_handler: FloatH) -> Self {
         Machine {
             state: State::new(max_size),
             ins_handler: ins_handler,
             int_handler: int_handler,
             float_handler: float_handler,
         }
+    }
+
+    pub fn cycle(&mut self) -> bool
+        where I: Instruction<IH, IntH, FloatH>
+    {
+        self.state.pop_exe().unwrap_or_else(&mut self.ins_handler).operate(self)
     }
 }
 
