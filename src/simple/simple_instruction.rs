@@ -823,77 +823,77 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_ins((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_ins(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_ins((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_ins(copy).ok())
+                    .is_some()
             }
             PlainOp(Copyi64) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_int((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_int(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_int((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_int(copy).ok())
+                    .is_some()
             }
             PlainOp(Copyf64) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_float((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_float(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_float((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_float(copy).ok())
+                    .is_some()
             }
             PlainOp(Copyb) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_bool((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_bool(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_bool((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_bool(copy).ok())
+                    .is_some()
             }
             PlainOp(Copyinsv) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_ins_vec((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_ins_vec(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_ins_vec((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_ins_vec(copy).ok())
+                    .is_some()
             }
             PlainOp(Copyi64v) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_int_vec((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_int_vec(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_int_vec((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_int_vec(copy).ok())
+                    .is_some()
             }
             PlainOp(Copyf64v) => {
                 let pos = machine
                     .state
                     .pop_int()
                     .unwrap_or_else(&mut machine.int_handler);
-                if let Some(copy) = machine.state.copy_float_vec((pos & 0x7FFFFFFF) as usize) {
-                    machine.state.push_float_vec(copy).is_ok()
-                } else {
-                    false
-                }
+                machine
+                    .state
+                    .copy_float_vec((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_float_vec(copy).ok())
+                    .is_some()
             }
             PlainOp(Popins) => machine.state.pop_ins().is_some(),
             PlainOp(Popi64) => machine.state.pop_int().is_some(),
