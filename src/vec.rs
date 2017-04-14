@@ -22,6 +22,15 @@ impl<T> TrackedVec<T>
     }
 
     #[inline]
+    pub fn new_from_vec(v: Vec<T>) -> TrackedVec<T> {
+        let size = v.iter().map(|e| e.total_memory()).sum();
+        TrackedVec {
+            vec: v,
+            size: size,
+        }
+    }
+
+    #[inline]
     pub fn push(&mut self, e: T) {
         self.size += e.total_memory();
         self.vec.push(e);
