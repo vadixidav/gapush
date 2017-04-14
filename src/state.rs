@@ -8,7 +8,7 @@ pub enum SizeError {
 
 pub struct State<Ins> {
     /// The limit of how much memory is allowed to be used.
-    max_size: usize,
+    pub max_size: usize,
     /// The current memory used.
     size: usize,
     /// Instructions are popped from this stack to be executed and this stack is not directly accessed.

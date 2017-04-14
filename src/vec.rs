@@ -1,7 +1,6 @@
 use TotalMemory;
 
 use std::vec;
-use std::collections::vec_deque::{self, VecDeque};
 use std::iter;
 use heapsize::HeapSizeOf;
 
@@ -112,77 +111,6 @@ impl<T> Iterator for TrackedCycleIter<T>
 }
 
 impl<T> HeapSizeOf for TrackedCycleIter<T> {
-    fn heap_size_of_children(&self) -> usize {
-        self.size
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TrackedDeque<T> {
-    vec: VecDeque<T>,
-    size: usize,
-}
-
-impl<T> TrackedDeque<T>
-    where T: TotalMemory
-{
-    #[inline]
-    pub fn new() -> TrackedDeque<T> {
-        TrackedDeque {
-            vec: VecDeque::new(),
-            size: 0,
-        }
-    }
-
-    #[inline]
-    pub fn push(&mut self, e: T) {
-        self.size += e.total_memory();
-        self.vec.push_back(e);
-    }
-
-    #[inline]
-    pub fn pop(&mut self) -> Option<T> {
-        let r = self.vec.pop_front();
-        if let Some(ref r) = r {
-            self.size -= r.total_memory();
-        }
-        r
-    }
-
-    #[inline]
-    pub fn get(&mut self, ix: usize) -> Option<&T> {
-        self.vec.get(ix)
-    }
-
-    #[inline]
-    pub fn into_iter(self) -> TrackedDeqIter<T> {
-        TrackedDeqIter {
-            iter: self.vec.into_iter(),
-            size: self.size,
-        }
-    }
-}
-
-impl<T> HeapSizeOf for TrackedDeque<T> {
-    fn heap_size_of_children(&self) -> usize {
-        self.size
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct TrackedDeqIter<T> {
-    iter: vec_deque::IntoIter<T>,
-    size: usize,
-}
-
-impl<T> Iterator for TrackedDeqIter<T> {
-    type Item = T;
-    fn next(&mut self) -> Option<T> {
-        self.iter.next()
-    }
-}
-
-impl<T> HeapSizeOf for TrackedDeqIter<T> {
     fn heap_size_of_children(&self) -> usize {
         self.size
     }

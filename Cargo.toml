@@ -6,3 +6,4 @@ authors = ["Geordon Worley <vadixidav@gmail.com>"]
 [dependencies]
 rand = "0.3"
 heapsize = "0.3"
+futures = "0.1"
