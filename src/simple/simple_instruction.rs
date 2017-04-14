@@ -258,13 +258,15 @@ pub enum PlainOp {
     /// ins: (e -- )
     /// exe: ( -- e)
     Call,
+    /// Does nothing
+    Nop,
 
     // External communication
     /// ins: (i -- )
     Provide,
 }
 
-const TOTAL_PLAIN_INSTRUCTIONS: usize = 91;
+const TOTAL_PLAIN_INSTRUCTIONS: usize = 92;
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
@@ -320,818 +322,820 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
         use self::PlainOp::*;
         // The returned instruction, which most operations don't use.
         let mut ret_ins = None;
-        (ret_ins,
-         match self {
-             PlainOp(Inci64) => {
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a.wrapping_add(1)).is_ok()
-        }
-             PlainOp(Deci64) => {
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a.wrapping_sub(1)).is_ok()
-        }
-             PlainOp(Addi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a.wrapping_add(b)).is_ok()
-        }
-             PlainOp(Subi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a.wrapping_sub(b)).is_ok()
-        }
-             PlainOp(Muli64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a.wrapping_mul(b)).is_ok()
-        }
-             PlainOp(Divi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.checked_div(b).unwrap_or_else(&mut machine.int_handler))
-                .is_ok()
-        }
-             PlainOp(Remi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.checked_rem(b).unwrap_or_else(&mut machine.int_handler))
-                .is_ok()
-        }
-             PlainOp(Negi64) => {
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.checked_neg().unwrap_or_else(&mut machine.int_handler))
-                .is_ok()
-        }
-             PlainOp(Absi64) => {
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.checked_abs().unwrap_or_else(&mut machine.int_handler))
-                .is_ok()
-        }
-             PlainOp(Powi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.pow((b.abs() & (0x7FFFFFFF)) as u32))
-                .is_ok()
-        }
-             PlainOp(Rotli64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.rotate_left((b & (0x7FFFFFFF)) as u32))
-                .is_ok()
-        }
-             PlainOp(Rotri64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.rotate_right((b & (0x7FFFFFFF)) as u32))
-                .is_ok()
-        }
-             PlainOp(Shftli64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.checked_shl((b & (0x7FFFFFFF)) as u32)
-                              .unwrap_or_else(&mut machine.int_handler))
-                .is_ok()
-        }
-             PlainOp(Shftri64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .push_int(a.checked_shr((b & (0x7FFFFFFF)) as u32)
-                              .unwrap_or_else(&mut machine.int_handler))
-                .is_ok()
-        }
-             PlainOp(Andi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a & b).is_ok()
-        }
-             PlainOp(Ori64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a | b).is_ok()
-        }
-             PlainOp(Xori64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(a ^ b).is_ok()
-        }
-             PlainOp(Invi64) => {
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_int(!a).is_ok()
-        }
-             PlainOp(Lesi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_bool(a < b).is_ok()
-        }
-             PlainOp(Grti64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_bool(a > b).is_ok()
-        }
-             PlainOp(Eqi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_bool(a == b).is_ok()
-        }
-             PlainOp(Neqi64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_bool(a != b).is_ok()
-        }
-             PlainOp(Incf64) => {
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a + 1.0).is_ok()
-        }
-             PlainOp(Decf64) => {
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a - 1.0).is_ok()
-        }
-             PlainOp(Addf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a + b).is_ok()
-        }
-             PlainOp(Subf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a - b).is_ok()
-        }
-             PlainOp(Mulf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a * b).is_ok()
-        }
-             PlainOp(Divf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a / b).is_ok()
-        }
-             PlainOp(Remf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a % b).is_ok()
-        }
-             PlainOp(Negf64) => {
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(-a).is_ok()
-        }
-             PlainOp(Absf64) => {
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a.abs()).is_ok()
-        }
-             PlainOp(Powif64) => {
-            let b = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine
-                .state
-                .push_float(a.powi(if b <= i32::max_value() as i64 && b >= i32::min_value as i64 {
-                                       b as i32
-                                   } else {
-                                       1
-                                   }))
-                .is_ok()
-        }
-             PlainOp(Powff64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_float(a.powf(b)).is_ok()
-        }
-             PlainOp(Lesf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_bool(a < b).is_ok()
-        }
-             PlainOp(Grtf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_bool(a > b).is_ok()
-        }
-             PlainOp(Eqf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_bool(a == b).is_ok()
-        }
-             PlainOp(Neqf64) => {
-            let b = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine.state.push_bool(a != b).is_ok()
-        }
-             PlainOp(Andb) => {
-            let b = machine.state.pop_bool().unwrap_or(false);
-            let a = machine.state.pop_bool().unwrap_or(false);
-            machine.state.push_bool(a && b).is_ok()
-        }
-             PlainOp(Orb) => {
-            let b = machine.state.pop_bool().unwrap_or(false);
-            let a = machine.state.pop_bool().unwrap_or(false);
-            machine.state.push_bool(a || b).is_ok()
-        }
-             PlainOp(Eqb) => {
-            let b = machine.state.pop_bool().unwrap_or(false);
-            let a = machine.state.pop_bool().unwrap_or(false);
-            machine.state.push_bool(a == b).is_ok()
-        }
-             PlainOp(Neqb) => {
-            let b = machine.state.pop_bool().unwrap_or(false);
-            let a = machine.state.pop_bool().unwrap_or(false);
-            machine.state.push_bool(a != b).is_ok()
-        }
-             PlainOp(Notb) => {
-            let a = machine.state.pop_bool().unwrap_or(false);
-            machine.state.push_bool(!a).is_ok()
-        }
-             PlainOp(Itof) => {
-            let a = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.push_float(a as f64).is_ok()
-        }
-             PlainOp(Ftoi) => {
-            use std::num::FpCategory;
-            let a = machine
-                .state
-                .pop_float()
-                .unwrap_or_else(&mut machine.float_handler);
-            machine
-                .state
-                .push_int(match a.classify() {
-                              FpCategory::Normal => a as i64,
-                              FpCategory::Zero => 0,
-                              _ => (machine.int_handler)(),
-                          })
-                .is_ok()
-        }
-             PlainOp(Rotins) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_ins((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Roti64) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_int((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Rotf64) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_float((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Rotb) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_bool((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Rotinsv) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_ins_vec((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Roti64v) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_int_vec((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Rotf64v) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine.state.rot_float_vec((pos & 0x7FFFFFFF) as usize)
-        }
-             PlainOp(Copyins) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_ins((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_ins(copy).ok())
-                .is_some()
-        }
-             PlainOp(Copyi64) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_int((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_int(copy).ok())
-                .is_some()
-        }
-             PlainOp(Copyf64) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_float((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_float(copy).ok())
-                .is_some()
-        }
-             PlainOp(Copyb) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_bool((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_bool(copy).ok())
-                .is_some()
-        }
-             PlainOp(Copyinsv) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_ins_vec((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_ins_vec(copy).ok())
-                .is_some()
-        }
-             PlainOp(Copyi64v) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_int_vec((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_int_vec(copy).ok())
-                .is_some()
-        }
-             PlainOp(Copyf64v) => {
-            let pos = machine
-                .state
-                .pop_int()
-                .unwrap_or_else(&mut machine.int_handler);
-            machine
-                .state
-                .copy_float_vec((pos & 0x7FFFFFFF) as usize)
-                .and_then(|copy| machine.state.push_float_vec(copy).ok())
-                .is_some()
-        }
-             PlainOp(Popins) => machine.state.pop_ins().is_some(),
-             PlainOp(Popi64) => machine.state.pop_int().is_some(),
-             PlainOp(Popf64) => machine.state.pop_float().is_some(),
-             PlainOp(Popb) => machine.state.pop_bool().is_some(),
-             PlainOp(Popinsv) => machine.state.pop_ins_vec().is_some(),
-             PlainOp(Popi64v) => machine.state.pop_int_vec().is_some(),
-             PlainOp(Popf64v) => machine.state.pop_float_vec().is_some(),
-             PlainOp(Pushvins) => {
-                 machine
-                     .state
-                     .pop_ins()
-                     .and_then(|e| machine.state.push_ins_to_vec(e).ok())
-                     .unwrap_or(false)
-             }
-             PlainOp(Pushvi64) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|e| machine.state.push_int_to_vec(e).ok())
-                     .unwrap_or(false)
-             }
-             PlainOp(Pushvf64) => {
-                 machine
-                     .state
-                     .pop_float()
-                     .and_then(|e| machine.state.push_float_to_vec(e).ok())
-                     .unwrap_or(false)
-             }
-             PlainOp(Popvins) => machine.state.pop_ins_from_vec().is_some(),
-             PlainOp(Popvi64) => machine.state.pop_int_from_vec().is_some(),
-             PlainOp(Popvf64) => machine.state.pop_float_from_vec().is_some(),
-             PlainOp(Readvins) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|ix| {
-                                   machine
-                                       .state
-                                       .get_ins_from_vec((ix & 0x7FFFFFFF) as usize)
-                               })
-                     .and_then(|e| machine.state.push_ins(e).ok())
-                     .is_some()
-             }
-             PlainOp(Readvi64) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|ix| {
-                                   machine
-                                       .state
-                                       .get_int_from_vec((ix & 0x7FFFFFFF) as usize)
-                               })
-                     .and_then(|e| machine.state.push_int(e).ok())
-                     .is_some()
-             }
-             PlainOp(Readvf64) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|ix| {
-                                   machine
-                                       .state
-                                       .get_float_from_vec((ix & 0x7FFFFFFF) as usize)
-                               })
-                     .and_then(|e| machine.state.push_float(e).ok())
-                     .is_some()
-             }
-             PlainOp(Writevins) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|ix| machine.state.pop_ins().map(|e| (ix, e)))
-                     .and_then(|(ix, e)| {
-                                   machine
-                                       .state
-                                       .write_ins_to_vec((ix & 0x7FFFFFFF) as usize, e)
-                                       .ok()
-                               })
-                     .unwrap_or(false)
-             }
-             PlainOp(Writevi64) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|ix| machine.state.pop_int().map(|e| (ix, e)))
-                     .map_or(false, |(ix, e)| {
-            machine
-                .state
-                .write_int_to_vec((ix & 0x7FFFFFFF) as usize, e);
-            true
-        })
-             }
-             PlainOp(Writevf64) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .and_then(|ix| machine.state.pop_float().map(|e| (ix, e)))
-                     .map_or(false, |(ix, e)| {
-            machine
-                .state
-                .write_float_to_vec((ix & 0x7FFFFFFF) as usize, e);
-            true
-        })
-             }
-             PlainOp(Zeroi64) => machine.state.push_int(0).is_ok(),
-             PlainOp(CreatePlain) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .map(|n| (n & 0x7FFFFFFF) as usize)
-                     .and_then(|n| if n < TOTAL_PLAIN_INSTRUCTIONS {
-                                   Some(unsafe { mem::transmute(n as u8) })
-                               } else {
-                                   None
-                               })
-                     .map(PlainOp)
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreateBasicBlock) => {
-                 machine
-                     .state
-                     .pop_ins_vec()
-                     .map(|v| BasicBlock(v.into_iter()))
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreateLoop) => {
-                 machine
-                     .state
-                     .pop_ins_vec()
-                     .map(|v| Loop(v.into_cycle_iter()))
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreateIf) => {
-                 machine
-                     .state
-                     .pop_ins_vec()
-                     .and_then(|vf| machine.state.pop_ins_vec().map(|vt| (vf, vt)))
-                     .map(|(vf, vt)| If(vf.into_iter(), vt.into_iter()))
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreatePushi64) => {
-                 machine
-                     .state
-                     .pop_int()
-                     .map(Pushi64)
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreatePushf64) => {
-                 machine
-                     .state
-                     .pop_float()
-                     .map(Pushf64)
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreatePushb) => {
-                 machine
-                     .state
-                     .pop_bool()
-                     .map(Pushb)
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreatePushi64v) => {
-                 machine
-                     .state
-                     .pop_int_vec()
-                     .map(Pushi64v)
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(CreatePushf64v) => {
-                 machine
-                     .state
-                     .pop_float_vec()
-                     .map(Pushf64v)
-                     .and_then(|ins| machine.state.push_ins(ins).ok())
-                     .is_some()
-             }
-             PlainOp(Return) => machine.state.pop_exe().is_some(),
-             PlainOp(Yield) => {
-                 machine
-                     .state
-                     .pop_exe()
-                     .and_then(|e| machine.state.push_ins(e).ok())
-                     .is_some()
-             }
-             PlainOp(Call) => {
-                 machine
-                     .state
-                     .pop_ins()
-                     .and_then(|e| machine.state.push_exe(e).ok())
-                     .is_some()
-             }
-             PlainOp(Provide) => {
-            ret_ins = machine.state.pop_ins();
-            ret_ins.is_some()
-        }
-             BasicBlock(mut b) => {
-                 if let Some(i) = b.next() {
-                     machine.state.push_exe(BasicBlock(b)).is_err() ||
-                     machine.state.push_exe(i).is_err()
-                 } else {
-                     false
-                 }
-             }
-             Loop(mut l) => {
-                 if let Some(i) = l.next() {
-                     machine.state.push_exe(Loop(l)).is_err() || machine.state.push_exe(i).is_err()
-                 } else {
-                     false
-                 }
-             }
-             If(b0, b1) => {
-            let decider = machine.state.pop_bool().unwrap_or(false);
-            machine
-                .state
-                .push_exe(BasicBlock(if decider { b0 } else { b1 }))
-                .is_ok()
-        }
-             Pushi64(n) => machine.state.push_int(n).is_ok(),
-             Pushf64(n) => machine.state.push_float(n).is_ok(),
-             Pushb(b) => machine.state.push_bool(b).is_ok(),
-             Pushi64v(v) => machine.state.push_int_vec(v).is_ok(),
-             Pushf64v(v) => machine.state.push_float_vec(v).is_ok(),
-         })
+        let mut success = match self {
+            PlainOp(Inci64) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_add(1)).is_ok()
+            }
+            PlainOp(Deci64) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_sub(1)).is_ok()
+            }
+            PlainOp(Addi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_add(b)).is_ok()
+            }
+            PlainOp(Subi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_sub(b)).is_ok()
+            }
+            PlainOp(Muli64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a.wrapping_mul(b)).is_ok()
+            }
+            PlainOp(Divi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.checked_div(b).unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Remi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.checked_rem(b).unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Negi64) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.checked_neg().unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Absi64) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.checked_abs().unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Powi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.pow((b.abs() & (0x7FFFFFFF)) as u32))
+                    .is_ok()
+            }
+            PlainOp(Rotli64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.rotate_left((b & (0x7FFFFFFF)) as u32))
+                    .is_ok()
+            }
+            PlainOp(Rotri64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.rotate_right((b & (0x7FFFFFFF)) as u32))
+                    .is_ok()
+            }
+            PlainOp(Shftli64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.checked_shl((b & (0x7FFFFFFF)) as u32)
+                                  .unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Shftri64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .push_int(a.checked_shr((b & (0x7FFFFFFF)) as u32)
+                                  .unwrap_or_else(&mut machine.int_handler))
+                    .is_ok()
+            }
+            PlainOp(Andi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a & b).is_ok()
+            }
+            PlainOp(Ori64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a | b).is_ok()
+            }
+            PlainOp(Xori64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(a ^ b).is_ok()
+            }
+            PlainOp(Invi64) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_int(!a).is_ok()
+            }
+            PlainOp(Lesi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a < b).is_ok()
+            }
+            PlainOp(Grti64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a > b).is_ok()
+            }
+            PlainOp(Eqi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a == b).is_ok()
+            }
+            PlainOp(Neqi64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_bool(a != b).is_ok()
+            }
+            PlainOp(Incf64) => {
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a + 1.0).is_ok()
+            }
+            PlainOp(Decf64) => {
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a - 1.0).is_ok()
+            }
+            PlainOp(Addf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a + b).is_ok()
+            }
+            PlainOp(Subf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a - b).is_ok()
+            }
+            PlainOp(Mulf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a * b).is_ok()
+            }
+            PlainOp(Divf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a / b).is_ok()
+            }
+            PlainOp(Remf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a % b).is_ok()
+            }
+            PlainOp(Negf64) => {
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(-a).is_ok()
+            }
+            PlainOp(Absf64) => {
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a.abs()).is_ok()
+            }
+            PlainOp(Powif64) => {
+                let b = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine
+                    .state
+                    .push_float(a.powi(if b <= i32::max_value() as i64 &&
+                                          b >= i32::min_value as i64 {
+                                           b as i32
+                                       } else {
+                                           1
+                                       }))
+                    .is_ok()
+            }
+            PlainOp(Powff64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_float(a.powf(b)).is_ok()
+            }
+            PlainOp(Lesf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_bool(a < b).is_ok()
+            }
+            PlainOp(Grtf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_bool(a > b).is_ok()
+            }
+            PlainOp(Eqf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_bool(a == b).is_ok()
+            }
+            PlainOp(Neqf64) => {
+                let b = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine.state.push_bool(a != b).is_ok()
+            }
+            PlainOp(Andb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a && b).is_ok()
+            }
+            PlainOp(Orb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a || b).is_ok()
+            }
+            PlainOp(Eqb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a == b).is_ok()
+            }
+            PlainOp(Neqb) => {
+                let b = machine.state.pop_bool().unwrap_or(false);
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(a != b).is_ok()
+            }
+            PlainOp(Notb) => {
+                let a = machine.state.pop_bool().unwrap_or(false);
+                machine.state.push_bool(!a).is_ok()
+            }
+            PlainOp(Itof) => {
+                let a = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.push_float(a as f64).is_ok()
+            }
+            PlainOp(Ftoi) => {
+                use std::num::FpCategory;
+                let a = machine
+                    .state
+                    .pop_float()
+                    .unwrap_or_else(&mut machine.float_handler);
+                machine
+                    .state
+                    .push_int(match a.classify() {
+                                  FpCategory::Normal => a as i64,
+                                  FpCategory::Zero => 0,
+                                  _ => (machine.int_handler)(),
+                              })
+                    .is_ok()
+            }
+            PlainOp(Rotins) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_ins((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Roti64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_int((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Rotf64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_float((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Rotb) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_bool((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Rotinsv) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_ins_vec((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Roti64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_int_vec((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Rotf64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine.state.rot_float_vec((pos & 0x7FFFFFFF) as usize)
+            }
+            PlainOp(Copyins) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_ins((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_ins(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Copyi64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_int((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_int(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Copyf64) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_float((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_float(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Copyb) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_bool((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_bool(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Copyinsv) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_ins_vec((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_ins_vec(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Copyi64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_int_vec((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_int_vec(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Copyf64v) => {
+                let pos = machine
+                    .state
+                    .pop_int()
+                    .unwrap_or_else(&mut machine.int_handler);
+                machine
+                    .state
+                    .copy_float_vec((pos & 0x7FFFFFFF) as usize)
+                    .and_then(|copy| machine.state.push_float_vec(copy).ok())
+                    .is_some()
+            }
+            PlainOp(Popins) => machine.state.pop_ins().is_some(),
+            PlainOp(Popi64) => machine.state.pop_int().is_some(),
+            PlainOp(Popf64) => machine.state.pop_float().is_some(),
+            PlainOp(Popb) => machine.state.pop_bool().is_some(),
+            PlainOp(Popinsv) => machine.state.pop_ins_vec().is_some(),
+            PlainOp(Popi64v) => machine.state.pop_int_vec().is_some(),
+            PlainOp(Popf64v) => machine.state.pop_float_vec().is_some(),
+            PlainOp(Pushvins) => {
+                machine
+                    .state
+                    .pop_ins()
+                    .and_then(|e| machine.state.push_ins_to_vec(e).ok())
+                    .unwrap_or(false)
+            }
+            PlainOp(Pushvi64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|e| machine.state.push_int_to_vec(e).ok())
+                    .unwrap_or(false)
+            }
+            PlainOp(Pushvf64) => {
+                machine
+                    .state
+                    .pop_float()
+                    .and_then(|e| machine.state.push_float_to_vec(e).ok())
+                    .unwrap_or(false)
+            }
+            PlainOp(Popvins) => machine.state.pop_ins_from_vec().is_some(),
+            PlainOp(Popvi64) => machine.state.pop_int_from_vec().is_some(),
+            PlainOp(Popvf64) => machine.state.pop_float_from_vec().is_some(),
+            PlainOp(Readvins) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| {
+                                  machine
+                                      .state
+                                      .get_ins_from_vec((ix & 0x7FFFFFFF) as usize)
+                              })
+                    .and_then(|e| machine.state.push_ins(e).ok())
+                    .is_some()
+            }
+            PlainOp(Readvi64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| {
+                                  machine
+                                      .state
+                                      .get_int_from_vec((ix & 0x7FFFFFFF) as usize)
+                              })
+                    .and_then(|e| machine.state.push_int(e).ok())
+                    .is_some()
+            }
+            PlainOp(Readvf64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| {
+                                  machine
+                                      .state
+                                      .get_float_from_vec((ix & 0x7FFFFFFF) as usize)
+                              })
+                    .and_then(|e| machine.state.push_float(e).ok())
+                    .is_some()
+            }
+            PlainOp(Writevins) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| machine.state.pop_ins().map(|e| (ix, e)))
+                    .and_then(|(ix, e)| {
+                                  machine
+                                      .state
+                                      .write_ins_to_vec((ix & 0x7FFFFFFF) as usize, e)
+                                      .ok()
+                              })
+                    .unwrap_or(false)
+            }
+            PlainOp(Writevi64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| machine.state.pop_int().map(|e| (ix, e)))
+                    .map_or(false, |(ix, e)| {
+                        machine
+                            .state
+                            .write_int_to_vec((ix & 0x7FFFFFFF) as usize, e);
+                        true
+                    })
+            }
+            PlainOp(Writevf64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .and_then(|ix| machine.state.pop_float().map(|e| (ix, e)))
+                    .map_or(false, |(ix, e)| {
+                        machine
+                            .state
+                            .write_float_to_vec((ix & 0x7FFFFFFF) as usize, e);
+                        true
+                    })
+            }
+            PlainOp(Zeroi64) => machine.state.push_int(0).is_ok(),
+            PlainOp(CreatePlain) => {
+                machine
+                    .state
+                    .pop_int()
+                    .map(|n| (n & 0x7FFFFFFF) as usize)
+                    .and_then(|n| if n < TOTAL_PLAIN_INSTRUCTIONS {
+                                  Some(unsafe { mem::transmute(n as u8) })
+                              } else {
+                                  None
+                              })
+                    .map(PlainOp)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreateBasicBlock) => {
+                machine
+                    .state
+                    .pop_ins_vec()
+                    .map(|v| BasicBlock(v.into_iter()))
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreateLoop) => {
+                machine
+                    .state
+                    .pop_ins_vec()
+                    .map(|v| Loop(v.into_cycle_iter()))
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreateIf) => {
+                machine
+                    .state
+                    .pop_ins_vec()
+                    .and_then(|vf| machine.state.pop_ins_vec().map(|vt| (vf, vt)))
+                    .map(|(vf, vt)| If(vf.into_iter(), vt.into_iter()))
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushi64) => {
+                machine
+                    .state
+                    .pop_int()
+                    .map(Pushi64)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushf64) => {
+                machine
+                    .state
+                    .pop_float()
+                    .map(Pushf64)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushb) => {
+                machine
+                    .state
+                    .pop_bool()
+                    .map(Pushb)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushi64v) => {
+                machine
+                    .state
+                    .pop_int_vec()
+                    .map(Pushi64v)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(CreatePushf64v) => {
+                machine
+                    .state
+                    .pop_float_vec()
+                    .map(Pushf64v)
+                    .and_then(|ins| machine.state.push_ins(ins).ok())
+                    .is_some()
+            }
+            PlainOp(Return) => machine.state.pop_exe().is_some(),
+            PlainOp(Yield) => {
+                machine
+                    .state
+                    .pop_exe()
+                    .and_then(|e| machine.state.push_ins(e).ok())
+                    .is_some()
+            }
+            PlainOp(Call) => {
+                machine
+                    .state
+                    .pop_ins()
+                    .and_then(|e| machine.state.push_exe(e).ok())
+                    .is_some()
+            }
+            PlainOp(Nop) => true,
+            PlainOp(Provide) => {
+                ret_ins = machine.state.pop_ins();
+                ret_ins.is_some()
+            }
+            BasicBlock(mut b) => {
+                if let Some(i) = b.next() {
+                    machine.state.push_exe(BasicBlock(b)).is_err() ||
+                    machine.state.push_exe(i).is_err()
+                } else {
+                    false
+                }
+            }
+            Loop(mut l) => {
+                if let Some(i) = l.next() {
+                    machine.state.push_exe(Loop(l)).is_err() || machine.state.push_exe(i).is_err()
+                } else {
+                    false
+                }
+            }
+            If(b0, b1) => {
+                let decider = machine.state.pop_bool().unwrap_or(false);
+                machine
+                    .state
+                    .push_exe(BasicBlock(if decider { b0 } else { b1 }))
+                    .is_ok()
+            }
+            Pushi64(n) => machine.state.push_int(n).is_ok(),
+            Pushf64(n) => machine.state.push_float(n).is_ok(),
+            Pushb(b) => machine.state.push_bool(b).is_ok(),
+            Pushi64v(v) => machine.state.push_int_vec(v).is_ok(),
+            Pushf64v(v) => machine.state.push_float_vec(v).is_ok(),
+        };
+        (ret_ins, success)
     }
 }
 
