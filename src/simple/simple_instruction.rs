@@ -258,9 +258,13 @@ pub enum PlainOp {
     /// ins: (e -- )
     /// exe: ( -- e)
     Call,
+
+    // External communication
+    /// ins: (i -- )
+    Provide,
 }
 
-const TOTAL_PLAIN_INSTRUCTIONS: usize = 90;
+const TOTAL_PLAIN_INSTRUCTIONS: usize = 91;
 
 impl rand::Rand for PlainOp {
     fn rand<R: rand::Rng>(rng: &mut R) -> Self {
@@ -315,7 +319,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
         use self::SimpleInstruction::*;
         use self::PlainOp::*;
         // The returned instruction, which most operations don't use.
-        let ret_ins = None;
+        let mut ret_ins = None;
         (ret_ins,
          match self {
              PlainOp(Inci64) => {
@@ -1096,6 +1100,10 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
                      .and_then(|e| machine.state.push_exe(e).ok())
                      .is_some()
              }
+             PlainOp(Provide) => {
+            ret_ins = machine.state.pop_ins();
+            ret_ins.is_some()
+        }
              BasicBlock(mut b) => {
                  if let Some(i) = b.next() {
                      machine.state.push_exe(BasicBlock(b)).is_err() ||
