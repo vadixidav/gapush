@@ -322,7 +322,7 @@ impl<IH, IntH, FloatH> Instruction<IH, IntH, FloatH> for SimpleInstruction
         use self::PlainOp::*;
         // The returned instruction, which most operations don't use.
         let mut ret_ins = None;
-        let mut success = match self {
+        let success = match self {
             PlainOp(Inci64) => {
                 let a = machine
                     .state
