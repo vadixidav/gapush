@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 use vec;
 
 use rand::Rng;
+use rand::distributions::{Exp, IndependentSample};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct Chromosome {
@@ -20,15 +21,55 @@ impl Chromosome {
         }
     }
 
+    pub fn mutate<R: Rng>(&mut self, maximum: usize, exp: &Exp, rng: &mut R) {
+        let mut index = 0;
+        for _ in 0..maximum {
+            index += exp.ind_sample(rng) as usize;
+            if index >= self.genes.len() {
+                return;
+            }
+            // Determine if we want to insert, remove, mutate, add crossover, or remove crossover.
+            match rng.gen_range(0, 5usize) {
+                0 => {
+                    self.genes.insert(index, rng.gen());
+                }
+                1 => {
+                    self.genes.remove(index);
+                    // This could potentially invalidate some crossover-point, so remove any such point.
+                    let filters = self.crossovers.iter().cloned().filter(|&n| n >= self.genes.len()).collect::<Vec<_>>();
+                    for n in filters {
+                        if !self.crossovers.remove(&n) {
+                            panic!("Error: Attempted to remove invalid crossover, but it didn't exist.");
+                        }
+                    }
+                }
+                2 => {
+                    self.genes[index] = rng.gen();
+                }
+                3 => {
+                    self.crossovers.insert(index);
+                }
+                _ => {
+                    let cross_choice = rng.gen_range(0, self.crossovers.len());
+                    let cross_choice = self.crossovers.iter().cloned().nth(cross_choice)
+                    .unwrap_or_else(|| panic!("Error: Tried to remove random crossover point and failed."));
+                    self.crossovers.remove(&cross_choice);
+                }
+            }
+        }
+    }
+
     pub fn mate(&self, other: &Self) -> Self {
-        let mut its = (self.crossovers.iter(), other.crossovers.iter());
+        use std::iter::once;
+        let mut its = (self.crossovers.iter().cloned().chain(once(self.genes.len())),
+                       other.crossovers.iter().cloned().chain(once(other.genes.len())));
         let mut genes = Vec::new();
         let mut crossovers = BTreeSet::new();
         let mut prev = 0;
         loop {
             // Work on the first chromosome.
-            let next = its.0.find(|&&n| n > prev);
-            if let Some(&next) = next {
+            let next = its.0.find(|&n| n > prev);
+            if let Some(next) = next {
                 genes.extend_from_slice(&self.genes[prev..next]);
                 crossovers.insert(next);
                 prev = next;
@@ -37,8 +78,8 @@ impl Chromosome {
             }
 
             // Work on the second chromosome.
-            let next = its.1.find(|&&n| n > prev);
-            if let Some(&next) = next {
+            let next = its.1.find(|&n| n > prev);
+            if let Some(next) = next {
                 genes.extend_from_slice(&self.genes[prev..next]);
                 crossovers.insert(next);
                 prev = next;
