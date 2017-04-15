@@ -4,6 +4,8 @@ pub use self::simple_instruction::*;
 use std::collections::BTreeSet;
 use vec;
 
+use rand::Rng;
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct Chromosome {
     genes: Vec<PlainOp>,
@@ -11,6 +13,13 @@ pub struct Chromosome {
 }
 
 impl Chromosome {
+    pub fn new_rand<R: Rng>(rng: &mut R, len: usize, crossovers: usize) -> Chromosome {
+        Chromosome {
+            genes: rng.gen_iter().collect(),
+            crossovers: (0..crossovers).map(|_| rng.gen_range(0, len)).collect(),
+        }
+    }
+
     pub fn mate(&self, other: &Self) -> Self {
         let mut its = (self.crossovers.iter(), other.crossovers.iter());
         let mut genes = Vec::new();
@@ -59,3 +68,5 @@ impl<'a> Into<SimpleInstruction> for &'a Chromosome {
                 self.genes.iter().cloned().map(SimpleInstruction::PlainOp).collect()).into_iter())
     }
 }
+
+
