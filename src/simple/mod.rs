@@ -4,6 +4,7 @@ pub use self::simple_instruction::*;
 use std::collections::BTreeSet;
 use vec;
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Deserialize)]
 pub struct Chromosome {
     genes: Vec<PlainOp>,
     crossovers: BTreeSet<usize>,

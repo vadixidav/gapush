@@ -1,6 +1,8 @@
 extern crate rand;
 extern crate heapsize;
-extern crate futures;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 
 mod vec;
 mod mem;
@@ -14,6 +16,7 @@ use heapsize::HeapSizeOf;
 
 /// A Gapush `Machine` is a state machine which tracks the memory consumption of an arbitrary program and executes it
 /// without going over a specified limit amount of memory (`max_memory`).
+#[derive(Debug, Clone)]
 pub struct Machine<Ins, InsHandler, IntHandler, FloatHandler> {
     /// The internal state which instructions operate on.
     pub state: State<Ins>,

@@ -5,7 +5,7 @@ use vec::*;
 use std::mem;
 
 /// Instructions which have implicit parameters and are encodable with a single integer.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Ord, PartialOrd, Serialize, Deserialize)]
 #[allow(dead_code)]
 pub enum PlainOp {
     // Integer operations

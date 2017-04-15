@@ -6,6 +6,7 @@ pub enum SizeError {
     Full,
 }
 
+#[derive(Debug, Clone)]
 pub struct State<Ins> {
     /// The limit of how much memory is allowed to be used.
     pub max_size: usize,
