@@ -42,6 +42,14 @@ impl Chromosome {
             crossovers: crossovers,
         }
     }
+
+    pub fn gene_len(&self) -> usize {
+        self.genes.len()
+    }
+
+    pub fn crossover_len(&self) -> usize {
+        self.crossovers.len()
+    }
 }
 
 impl<'a> Into<SimpleInstruction> for &'a Chromosome {
