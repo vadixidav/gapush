@@ -266,7 +266,7 @@ impl<Ins> State<Ins>
     }
 
     pub fn rot_ins_vec(&mut self, pos: usize) -> bool {
-        let len = self.float_stack.len();
+        let len = self.ins_vec_stack.len();
         if pos < len {
             let e = self.ins_vec_stack.remove(len - pos - 1);
             self.ins_vec_stack.push(e);
