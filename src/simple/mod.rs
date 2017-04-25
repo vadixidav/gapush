@@ -16,7 +16,7 @@ pub struct Chromosome {
 impl Chromosome {
     pub fn new_rand<R: Rng>(rng: &mut R, len: usize, crossovers: usize) -> Chromosome {
         Chromosome {
-            genes: rng.gen_iter().collect(),
+            genes: rng.gen_iter().take(len).collect(),
             crossovers: (0..crossovers).map(|_| rng.gen_range(0, len)).collect(),
         }
     }
