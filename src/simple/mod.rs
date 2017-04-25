@@ -50,10 +50,12 @@ impl Chromosome {
                     self.crossovers.insert(index);
                 }
                 _ => {
-                    let cross_choice = rng.gen_range(0, self.crossovers.len());
-                    let cross_choice = self.crossovers.iter().cloned().nth(cross_choice)
-                    .unwrap_or_else(|| panic!("Error: Tried to remove random crossover point and failed."));
-                    self.crossovers.remove(&cross_choice);
+                    if self.crossovers.len() != 0 {
+                        let cross_choice = rng.gen_range(0, self.crossovers.len());
+                        let cross_choice = self.crossovers.iter().cloned().nth(cross_choice)
+                        .unwrap_or_else(|| panic!("Error: Tried to remove random crossover point and failed."));
+                        self.crossovers.remove(&cross_choice);
+                    }
                 }
             }
         }
