@@ -1,5 +1,6 @@
 use vec::*;
 use TotalMemory;
+use HeapSizeOf;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SizeError {
@@ -28,6 +29,12 @@ pub struct State<Ins> {
     int_vec_stack: Vec<TrackedVec<i64>>,
     /// This is a stack for float vectors.
     float_vec_stack: Vec<TrackedVec<f64>>,
+}
+
+impl<Ins> HeapSizeOf for State<Ins> where Ins: HeapSizeOf {
+    fn heap_size_of_children(&self) -> usize {
+        self.size
+    }
 }
 
 impl<Ins> State<Ins> {
